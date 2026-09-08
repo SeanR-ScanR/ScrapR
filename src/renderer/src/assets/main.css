@@ -1,0 +1,266 @@
+:root {
+  --bg-dark: #1e2531;
+  --bg-main: #293441;
+  --bg-card: #5a6a7c;
+  --bg-input: #293441;
+  --border-color: #465466;
+  --accent-color: #3b1c71; /* Violet */
+  --text-main: #ffffff;
+  --text-muted: #b0bac5;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  background-color: var(--bg-main);
+  color: var(--text-main);
+}
+
+/* App Layout */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: var(--bg-dark);
+}
+
+/* Topbar (Browser Style) */
+.topbar {
+  display: flex;
+  align-items: center;
+  padding: 10px 15px;
+  background-color: var(--bg-dark);
+  border-bottom: 1px solid var(--border-color);
+  gap: 15px;
+}
+
+.window-controls {
+  display: flex;
+  gap: 6px;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: #465466;
+}
+
+.browser-nav {
+  display: flex;
+  gap: 10px;
+  color: var(--text-muted);
+}
+
+.address-bar {
+  flex-grow: 1;
+  height: 28px;
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+}
+
+/* Main Layout */
+.main-layout {
+  display: flex;
+  flex-grow: 1;
+  overflow: hidden;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 200px;
+  background-color: var(--bg-dark);
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar h1 {
+  font-size: 24px;
+  padding: 20px;
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.nav-links {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 20px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border-color);
+  gap: 12px;
+  font-weight: 600;
+  color: var(--text-main);
+  transition: background 0.2s;
+}
+
+.nav-item:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.nav-item.active {
+  background-color: var(--accent-color);
+}
+
+.settings-link {
+  margin-top: auto;
+  border-top: 1px solid var(--border-color);
+  border-bottom: none;
+}
+
+/* Content Area */
+.content-area {
+  flex-grow: 1;
+  background-color: var(--bg-main);
+  padding: 30px;
+  overflow-y: auto;
+}
+
+.section-title {
+  font-size: 16px;
+  margin-bottom: 15px;
+  font-weight: 600;
+}
+
+/* Generic Inputs */
+.generic-input {
+  width: 100%;
+  padding: 10px 15px;
+  background-color: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: var(--text-main);
+  margin-bottom: 30px;
+  outline: none;
+}
+
+.generic-input::placeholder {
+  color: var(--text-muted);
+}
+
+.filters-row {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.filters-row .generic-input {
+  margin-bottom: 0;
+  flex-grow: 1;
+  max-width: 300px;
+}
+
+.generic-select {
+  padding: 10px 15px;
+  background-color: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: var(--text-main);
+  min-width: 150px;
+  outline: none;
+  appearance: none;
+}
+
+/* Grid & Cards */
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 20px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.card-image-placeholder {
+  width: 100%;
+  aspect-ratio: 3/4;
+  background-color: var(--bg-card);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+}
+
+.card-title {
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* List Items */
+.list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 30px;
+}
+
+.list-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 15px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.list-item-image {
+  width: 32px;
+  height: 32px;
+  background-color: var(--bg-card);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 15px;
+}
+
+.list-item-content {
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.list-item-title {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.list-item-subtitle {
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.list-item-actions {
+  display: flex;
+  gap: 15px;
+}
+
+.action-icon {
+  cursor: pointer;
+  color: var(--text-main);
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
+.action-icon:hover {
+  opacity: 1;
+}
