@@ -1,12 +1,12 @@
-import React from 'react'
-import ListItem from '@renderer/components/ListItem'
+import React from 'react';
+import ListItem from '@renderer/components/ListItem';
 
 const PageSources: React.FC = () => {
   // Simulation de données
   const sources: Array<{ title: string; lang: string }> = Array(5).fill({
     title: 'Comic Days',
     lang: 'Japonais'
-  })
+  });
 
   return (
     <div className="content-area">
@@ -35,7 +35,7 @@ const PageSources: React.FC = () => {
         ))}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default PageSources
+export default PageSources;

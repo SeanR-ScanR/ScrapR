@@ -1,4 +1,4 @@
 export default interface ListItemProps {
-  title: string
-  lang: string
+  title: string;
+  lang: string;
 }

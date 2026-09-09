@@ -1,5 +1,5 @@
-import React from 'react'
-import NavItemProps from '@renderer/interfaces/NavItemProps'
+import React from 'react';
+import NavItemProps from '@renderer/interfaces/NavItemProps';
 
 const NavItem: React.FC<NavItemProps> = ({ icon, label, active, onClick, isBottom = false }) => (
   <div
@@ -9,6 +9,6 @@ const NavItem: React.FC<NavItemProps> = ({ icon, label, active, onClick, isBotto
     {icon}
     <span>{label}</span>
   </div>
-)
+);
 
-export default NavItem
+export default NavItem;

@@ -1,8 +1,8 @@
-import React from 'react'
-import Card from '@renderer/components/Card'
+import React from 'react';
+import Card from '@renderer/components/Card';
 
 const PageAccueil: React.FC = () => {
-  const favorites: string[] = ['7 Princess', 'Sentai', 'Marchen', 'Aishiteru', 'Star Blossom']
+  const favorites: string[] = ['7 Princess', 'Sentai', 'Marchen', 'Aishiteru', 'Star Blossom'];
 
   return (
     <div className="content-area">
@@ -16,7 +16,7 @@ const PageAccueil: React.FC = () => {
         ))}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default PageAccueil
+export default PageAccueil;

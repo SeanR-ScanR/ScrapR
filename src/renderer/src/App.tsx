@@ -1,15 +1,15 @@
-import React, { useState } from 'react'
-import './assets/main.css'
-import PageAccueil from '@renderer/pages/PageAccueil'
-import PageSources from '@renderer/pages/PageSources'
-import TopBar from '@renderer/components/TopBar'
-import NavItem from '@renderer/components/NavItem'
-import { IconHome, IconPlug, IconPuzzle, IconSettings } from '@renderer/components/icons'
+import React, { useState } from 'react';
+import './assets/main.css';
+import PageAccueil from '@renderer/pages/PageAccueil';
+import PageSources from '@renderer/pages/PageSources';
+import TopBar from '@renderer/components/TopBar';
+import NavItem from '@renderer/components/NavItem';
+import { IconHome, IconPlug, IconPuzzle, IconSettings } from '@renderer/components/icons';
 
-type TabType = 'accueil' | 'sources' | 'extension' | 'settings'
+type TabType = 'accueil' | 'sources' | 'extension' | 'settings';
 
 const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<TabType>('accueil')
+  const [activeTab, setActiveTab] = useState<TabType>('accueil');
 
   return (
     <div className="app-container">
@@ -53,7 +53,7 @@ const App: React.FC = () => {
         {activeTab === 'sources' && <PageSources />}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default App
+export default App;

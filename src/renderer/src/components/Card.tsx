@@ -1,6 +1,6 @@
-import React from 'react'
-import CardProps from '@renderer/interfaces/CardProps'
-import { IconImage } from '@renderer/components/icons'
+import React from 'react';
+import CardProps from '@renderer/interfaces/CardProps';
+import { IconImage } from '@renderer/components/icons';
 
 const Card: React.FC<CardProps> = ({ title }) => (
   <div className="card">
@@ -9,6 +9,6 @@ const Card: React.FC<CardProps> = ({ title }) => (
     </div>
     <span className="card-title">{title}</span>
   </div>
-)
+);
 
-export default Card
+export default Card;

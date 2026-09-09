@@ -1,3 +1,3 @@
 export default interface CardProps {
-  title: string
+  title: string;
 }

@@ -1,4 +1,4 @@
-import React from 'react'
+import React from 'react';
 
 const TopBar: React.FC = () => (
   <div className="topbar">
@@ -16,4 +16,4 @@ const TopBar: React.FC = () => (
   </div>
 );
 
-export default TopBar
+export default TopBar;

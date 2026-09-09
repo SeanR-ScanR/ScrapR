@@ -1,6 +1,6 @@
-import React from 'react'
-import ListItemProps from '@renderer/interfaces/ListItemProps'
-import { IconImage, IconSettings, IconTrash } from '@renderer/components/icons'
+import React from 'react';
+import ListItemProps from '@renderer/interfaces/ListItemProps';
+import { IconImage, IconSettings, IconTrash } from '@renderer/components/icons';
 
 const ListItem: React.FC<ListItemProps> = ({ title, lang }) => (
   <div className="list-item">
@@ -20,6 +20,6 @@ const ListItem: React.FC<ListItemProps> = ({ title, lang }) => (
       </div>
     </div>
   </div>
-)
+);
 
-export default ListItem
+export default ListItem;
