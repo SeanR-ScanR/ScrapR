@@ -165,11 +165,20 @@ export type ChapterDescriptor = DescriptorOf<typeof Descriptors.CHAPTER>;
 export type PageDescriptor = DescriptorOf<typeof Descriptors.PAGE>;
 
 /* =========================================================
+ * Suggestions types
+ * =======================================================*/
+
+export type Suggestions = Partial<{
+  [K in Kind]: Array<PreviewMap[K]>;
+}>;
+
+/* =========================================================
  * Plugin
  * =======================================================*/
 
 export type Plugin = {
   name: string;
+  suggestions?: () => Promise<Suggestions>;
   descriptors: Partial<{
     [K in Kind]: DescriptorOf<K>;
   }>;

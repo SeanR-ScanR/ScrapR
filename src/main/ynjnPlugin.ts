@@ -4,7 +4,8 @@ import type {
   Magazine,
   MagazinePreview,
   PagePreview,
-  Plugin
+  Plugin,
+  Suggestions
 } from './pluginTypes.d.ts';
 import axios from 'axios';
 import { Descriptors } from './pluginGlobals';
@@ -15,6 +16,24 @@ const chapterPagesCache = new Map<ChapterPreview['id'], any[]>();
 
 const ynjnPlugin: Plugin = {
   name: 'ynjn',
+  suggestions: async () => {
+    const apiRes = await aFetch.get('https://webapi.ynjn.jp/title/feature', {
+      params: {
+        displayLocation: 'TOP_PAGE_5',
+        page: 1
+      }
+    });
+    const res = apiRes.data.data.titles.map((t): MagazinePreview => ({
+      kind: Descriptors.MAGAZINE,
+      id: t.id,
+      title: t.name
+    }));
+    const suggestions: Suggestions = {
+      magazine: res
+    };
+    console.log(suggestions);
+    return suggestions;
+  },
   descriptors: {
     magazine: {
       _do: {
