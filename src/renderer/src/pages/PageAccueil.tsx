@@ -1,21 +1,34 @@
 import React from 'react';
+import { Grid, Heading, TextField } from '@radix-ui/themes';
+import AppTheme from '@renderer/components/AppTheme';
 import Card from '@renderer/components/Card';
 
 const PageAccueil: React.FC = () => {
   const favorites: string[] = ['7 Princess', 'Sentai', 'Marchen', 'Aishiteru', 'Star Blossom'];
 
   return (
-    <div className="content-area">
-      <h2 className="section-title">Rip par URL</h2>
-      <input type="text" className="generic-input" placeholder="" />
+    <AppTheme>
+      <main className="content-area">
+        <Heading as="h2" size="3" weight="medium" className="section-title" id="rip-url-title">
+          Rip par URL
+        </Heading>
+        <TextField.Root
+          size="3"
+          variant="surface"
+          className="url-input"
+          aria-labelledby="rip-url-title"
+        />
 
-      <h2 className="section-title">Favoris</h2>
-      <div className="cards-grid">
-        {favorites.map((fav, index) => (
-          <Card key={index} title={fav} />
-        ))}
-      </div>
-    </div>
+        <Heading as="h2" size="3" weight="medium" className="section-title">
+          Favoris
+        </Heading>
+        <Grid className="cards-grid">
+          {favorites.map((fav) => (
+            <Card key={fav} title={fav} />
+          ))}
+        </Grid>
+      </main>
+    </AppTheme>
   );
 };
 

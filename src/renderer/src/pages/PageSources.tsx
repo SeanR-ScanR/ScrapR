@@ -1,4 +1,6 @@
 import React from 'react';
+import { Flex, Heading, Select, TextField } from '@radix-ui/themes';
+import AppTheme from '@renderer/components/AppTheme';
 import ListItem from '@renderer/components/ListItem';
 
 const PageSources: React.FC = () => {
@@ -9,32 +11,62 @@ const PageSources: React.FC = () => {
   });
 
   return (
-    <div className="content-area">
-      <h2 className="section-title">Sources</h2>
+    <AppTheme>
+      <main className="content-area">
+        <Heading as="h2" size="3" weight="medium" className="section-title">
+          Sources
+        </Heading>
 
-      <div className="filters-row">
-        <input type="text" className="generic-input" placeholder="Rechercher" />
-        <select className="generic-select">
-          <option>Style</option>
-        </select>
-        <select className="generic-select">
-          <option>Langue</option>
-        </select>
-      </div>
+        <Flex wrap="wrap" className="filters-row">
+          <TextField.Root
+            size="3"
+            variant="surface"
+            className="source-search"
+            placeholder="Rechercher"
+            aria-label="Rechercher une source"
+          />
+          <Select.Root size="3" defaultValue="style">
+            <Select.Trigger variant="surface" className="source-filter" aria-label="Style" />
+            <Select.Content className="scrapr-theme" position="popper">
+              <Select.Item value="style">Style</Select.Item>
+            </Select.Content>
+          </Select.Root>
+          <Select.Root size="3" defaultValue="langue">
+            <Select.Trigger variant="surface" className="source-filter" aria-label="Langue" />
+            <Select.Content className="scrapr-theme" position="popper">
+              <Select.Item value="langue">Langue</Select.Item>
+            </Select.Content>
+          </Select.Root>
+        </Flex>
 
-      <h2 className="section-title">Plus récente</h2>
-      <div className="list-container">
-        <ListItem title="Comic Days" lang="Japonais" />
-        <ListItem title="Comic Days" lang="Japonais" />
-      </div>
+        <Heading
+          as="h2"
+          size="3"
+          weight="medium"
+          className="section-title"
+          id="recent-sources-title"
+        >
+          Plus récente
+        </Heading>
+        <Flex asChild direction="column" className="list-container">
+          <ul aria-labelledby="recent-sources-title">
+            <ListItem title="Comic Days" lang="Japonais" />
+            <ListItem title="Comic Days" lang="Japonais" />
+          </ul>
+        </Flex>
 
-      <h2 className="section-title">Tous</h2>
-      <div className="list-container">
-        {sources.map((src, index) => (
-          <ListItem key={index} title={src.title} lang={src.lang} />
-        ))}
-      </div>
-    </div>
+        <Heading as="h2" size="3" weight="medium" className="section-title" id="all-sources-title">
+          Tous
+        </Heading>
+        <Flex asChild direction="column" className="list-container">
+          <ul aria-labelledby="all-sources-title">
+            {sources.map((src, index) => (
+              <ListItem key={index} title={src.title} lang={src.lang} />
+            ))}
+          </ul>
+        </Flex>
+      </main>
+    </AppTheme>
   );
 };
 

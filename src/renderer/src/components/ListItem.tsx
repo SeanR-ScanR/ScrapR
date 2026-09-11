@@ -1,25 +1,44 @@
 import React from 'react';
+import { Flex, IconButton, Text } from '@radix-ui/themes';
 import ListItemProps from '@renderer/interfaces/ListItemProps';
 import { ImageOffIcon, SettingsIcon, TrashIcon } from 'lucide-react';
 
 const ListItem: React.FC<ListItemProps> = ({ title, lang }) => (
-  <div className="list-item">
-    <div className="list-item-image">
-      <ImageOffIcon />
-    </div>
-    <div className="list-item-content">
-      <span className="list-item-title">{title}</span>
-      <span className="list-item-subtitle">• {lang}</span>
-    </div>
-    <div className="list-item-actions">
-      <div className="action-icon">
-        <TrashIcon />
-      </div>
-      <div className="action-icon">
-        <SettingsIcon />
-      </div>
-    </div>
-  </div>
+  <Flex asChild align="center" className="list-item">
+    <li>
+      <Flex align="center" justify="center" flexShrink="0" className="list-item-image">
+        <ImageOffIcon aria-hidden="true" />
+      </Flex>
+      <Flex align="center" gap="2" flexGrow="1" wrap="wrap" className="list-item-content">
+        <Text size="2" weight="medium" className="list-item-title">
+          {title}
+        </Text>
+        <Text size="2" className="list-item-subtitle">
+          • {lang}
+        </Text>
+      </Flex>
+      <Flex flexShrink="0" className="list-item-actions">
+        <IconButton
+          type="button"
+          variant="ghost"
+          disabled
+          aria-label={`Supprimer ${title}`}
+          className="action-icon"
+        >
+          <TrashIcon aria-hidden="true" />
+        </IconButton>
+        <IconButton
+          type="button"
+          variant="ghost"
+          disabled
+          aria-label={`Paramètres de ${title}`}
+          className="action-icon"
+        >
+          <SettingsIcon aria-hidden="true" />
+        </IconButton>
+      </Flex>
+    </li>
+  </Flex>
 );
 
 export default ListItem;

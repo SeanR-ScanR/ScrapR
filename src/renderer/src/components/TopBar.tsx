@@ -1,19 +1,23 @@
 import React from 'react';
+import { Box, Flex, Text } from '@radix-ui/themes';
+import AppTheme from './AppTheme';
 
 const TopBar: React.FC = () => (
-  <div className="topbar">
-    <div className="window-controls">
-      <div className="dot" />
-      <div className="dot" />
-      <div className="dot" />
-    </div>
-    <div className="browser-nav">
-      <span>{'<'}</span>
-      <span>{'>'}</span>
-      <span>{'↻'}</span>
-    </div>
-    <div className="address-bar"></div>
-  </div>
+  <AppTheme>
+    <Flex align="center" className="topbar" aria-hidden="true">
+      <Flex className="window-controls">
+        <Box className="dot" />
+        <Box className="dot" />
+        <Box className="dot" />
+      </Flex>
+      <Flex className="browser-nav">
+        <Text>{'<'}</Text>
+        <Text>{'>'}</Text>
+        <Text>{'↻'}</Text>
+      </Flex>
+      <Box flexGrow="1" className="address-bar" />
+    </Flex>
+  </AppTheme>
 );
 
 export default TopBar;

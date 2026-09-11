@@ -22,7 +22,7 @@ body {
   color: var(--text-main);
 }
 
-/* App Layout */
+/* Keep the shared shell defaults independent of the POC's theme. */
 .app-container {
   display: flex;
   flex-direction: column;
@@ -30,36 +30,55 @@ body {
   background-color: var(--bg-dark);
 }
 
-/* Topbar (Browser Style) */
-.topbar {
-  display: flex;
-  align-items: center;
+.scrapr-theme {
+  --default-font-family:
+    Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell,
+    'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  --default-line-height: 1.6;
+  --heading-font-family: var(--default-font-family);
+  --heading-letter-spacing: 0;
+  --font-weight-medium: 600;
+  --color-background: var(--bg-main);
+  --color-surface: transparent;
+  --color-panel-solid: var(--bg-dark);
+  --gray-a7: var(--border-color);
+  --gray-a10: var(--text-muted);
+  --gray-11: var(--text-muted);
+  --gray-12: var(--text-main);
+  --accent-9: var(--accent-color);
+  --accent-10: #492584;
+  --accent-contrast: var(--text-main);
+  --cursor-button: pointer;
+
+  min-height: 0;
+}
+
+.scrapr-theme.topbar {
+  flex-shrink: 0;
   padding: 10px 15px;
   background-color: var(--bg-dark);
   border-bottom: 1px solid var(--border-color);
   gap: 15px;
 }
 
-.window-controls {
-  display: flex;
+.scrapr-theme .window-controls {
   gap: 6px;
 }
 
-.dot {
+.scrapr-theme .dot {
   width: 10px;
   height: 10px;
   border-radius: 50%;
   background-color: #465466;
 }
 
-.browser-nav {
-  display: flex;
+.scrapr-theme .browser-nav {
   gap: 10px;
   color: var(--text-muted);
 }
 
-.address-bar {
-  flex-grow: 1;
+.scrapr-theme .address-bar {
+  min-width: 0;
   height: 28px;
   background-color: var(--bg-input);
   border: 1px solid var(--border-color);
@@ -68,54 +87,56 @@ body {
 
 /* Main Layout */
 .main-layout {
-  display: flex;
   flex-grow: 1;
+  min-height: 0;
   overflow: hidden;
 }
 
 /* Sidebar */
-.sidebar {
+.scrapr-theme.sidebar {
   width: 200px;
+  flex-shrink: 0;
   background-color: var(--bg-dark);
   border-right: 1px solid var(--border-color);
-  display: flex;
-  flex-direction: column;
+  overflow-y: auto;
 }
 
-.sidebar h1 {
+.scrapr-theme .brand-title {
   font-size: 24px;
+  line-height: 1.6;
   padding: 20px;
   text-align: center;
   margin-bottom: 10px;
 }
 
-.nav-links {
-  display: flex;
-  flex-direction: column;
-  flex-grow: 1;
-}
-
-.nav-item {
-  display: flex;
-  align-items: center;
+.scrapr-theme .nav-item {
+  justify-content: flex-start;
+  flex-shrink: 0;
+  width: 100%;
+  height: auto;
+  min-height: 50px;
+  margin: 0;
   padding: 12px 20px;
-  cursor: pointer;
+  box-sizing: border-box;
   border-bottom: 1px solid var(--border-color);
   gap: 12px;
+  font-size: 16px;
+  line-height: 1.6;
+  letter-spacing: 0;
   font-weight: 600;
   color: var(--text-main);
   transition: background 0.2s;
 }
 
-.nav-item:hover {
+.scrapr-theme .nav-item:not(.active):hover {
   background-color: rgba(255, 255, 255, 0.05);
 }
 
-.nav-item.active {
-  background-color: var(--accent-color);
+.scrapr-theme .nav-item:focus-visible {
+  outline-offset: -3px;
 }
 
-.settings-link {
+.scrapr-theme .settings-link {
   margin-top: auto;
   border-top: 1px solid var(--border-color);
   border-bottom: none;
@@ -129,139 +150,159 @@ body {
   overflow-y: auto;
 }
 
-.section-title {
+.scrapr-theme.content-area {
+  min-width: 0;
+}
+
+.scrapr-theme .section-title {
   font-size: 16px;
+  line-height: 1.6;
   margin-bottom: 15px;
   font-weight: 600;
 }
 
-/* Generic Inputs */
-.generic-input {
-  width: 100%;
-  padding: 10px 15px;
-  background-color: transparent;
-  border: 1px solid var(--border-color);
+/* Radix owns control surfaces, borders, hover, and focus states. */
+.scrapr-theme .rt-TextFieldRoot,
+.scrapr-theme .source-filter {
+  height: 37px;
   border-radius: 4px;
-  color: var(--text-main);
+  font-size: 14px;
+}
+
+.scrapr-theme .url-input {
+  width: 100%;
   margin-bottom: 30px;
-  outline: none;
 }
 
-.generic-input::placeholder {
-  color: var(--text-muted);
-}
-
-.filters-row {
-  display: flex;
+.scrapr-theme .filters-row {
   gap: 15px;
   margin-bottom: 30px;
 }
 
-.filters-row .generic-input {
-  margin-bottom: 0;
-  flex-grow: 1;
+.scrapr-theme .source-search {
+  flex: 1 1 180px;
+  min-width: 0;
   max-width: 300px;
 }
 
-.generic-select {
-  padding: 10px 15px;
-  background-color: transparent;
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  color: var(--text-main);
+.scrapr-theme .source-filter {
   min-width: 150px;
-  outline: none;
-  appearance: none;
 }
 
 /* Grid & Cards */
-.cards-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+.scrapr-theme .cards-grid {
+  grid-template-columns: repeat(auto-fill, minmax(min(110px, 100%), 1fr));
   gap: 20px;
 }
 
-.card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+.scrapr-theme .card {
   gap: 10px;
-  cursor: pointer;
 }
 
-.card-image-placeholder {
+.scrapr-theme .card-image-placeholder {
   width: 100%;
   aspect-ratio: 3/4;
   background-color: var(--bg-card);
-  display: flex;
-  align-items: center;
-  justify-content: center;
   border-radius: 4px;
 }
 
-.card-title {
+.scrapr-theme .card-title {
   font-size: 13px;
-  font-weight: 600;
-  text-align: center;
+  line-height: 1.6;
 }
 
 /* List Items */
-.list-container {
-  display: flex;
-  flex-direction: column;
+.scrapr-theme .list-container {
+  list-style: none;
   gap: 10px;
   margin-bottom: 30px;
 }
 
-.list-item {
-  display: flex;
-  align-items: center;
+.scrapr-theme .list-item {
   padding: 10px 15px;
   border: 1px solid var(--border-color);
   border-radius: 4px;
   background-color: transparent;
 }
 
-.list-item-image {
+.scrapr-theme .list-item-image {
   width: 32px;
   height: 32px;
   background-color: var(--bg-card);
   border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   margin-right: 15px;
 }
 
-.list-item-content {
-  flex-grow: 1;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.scrapr-theme .list-item-content {
+  min-width: 0;
 }
 
-.list-item-title {
-  font-weight: 600;
-  font-size: 14px;
+.scrapr-theme .list-item-title,
+.scrapr-theme .list-item-subtitle {
+  line-height: 1.6;
 }
 
-.list-item-subtitle {
+.scrapr-theme .list-item-subtitle {
   color: var(--text-muted);
   font-size: 14px;
 }
 
-.list-item-actions {
-  display: flex;
+.scrapr-theme .list-item-actions {
   gap: 15px;
+  margin-left: 15px;
 }
 
-.action-icon {
-  cursor: pointer;
+.scrapr-theme .action-icon {
+  width: 24px;
+  height: 24px;
+  margin: 0;
+  padding: 0;
   color: var(--text-main);
   opacity: 0.8;
-  transition: opacity 0.2s;
 }
 
-.action-icon:hover {
-  opacity: 1;
+@media (max-width: 600px) {
+  .scrapr-theme.sidebar {
+    width: 140px;
+  }
+
+  .scrapr-theme .nav-item {
+    padding: 12px;
+    gap: 8px;
+    font-size: 14px;
+  }
+
+  .scrapr-theme.content-area {
+    padding: 20px 15px;
+  }
+
+  .scrapr-theme .source-search {
+    flex-basis: 100%;
+    max-width: none;
+  }
+
+  .scrapr-theme .source-filter {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .scrapr-theme .list-item {
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 10px;
+  }
+
+  .scrapr-theme .list-item-image {
+    margin-right: 0;
+  }
+
+  .scrapr-theme .list-item-content {
+    flex: 1 1 90px;
+    column-gap: 8px;
+    row-gap: 0;
+  }
+
+  .scrapr-theme .list-item-actions {
+    margin-left: auto;
+  }
 }
