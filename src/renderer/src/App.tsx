@@ -4,9 +4,16 @@ import PageAccueil from '@renderer/pages/PageAccueil';
 import PageSources from '@renderer/pages/PageSources';
 import TopBar from '@renderer/components/TopBar';
 import NavItem from '@renderer/components/NavItem';
-import { IconHome, IconPlug, IconPuzzle, IconSettings } from '@renderer/components/icons';
+import PocApp from '@renderer/poc/PocApp';
+import {
+  FlaskConicalIcon,
+  GalleryVerticalEndIcon,
+  HouseIcon,
+  SettingsIcon,
+  ToyBrickIcon
+} from 'lucide-react';
 
-type TabType = 'accueil' | 'sources' | 'extension' | 'settings';
+type TabType = 'accueil' | 'sources' | 'extension' | 'settings' | 'poc';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('accueil');
@@ -20,26 +27,32 @@ const App: React.FC = () => {
           <h1>ScrapR</h1>
           <nav className="nav-links">
             <NavItem
-              icon={<IconHome />}
+              icon={<HouseIcon />}
               label="Accueil"
               active={activeTab === 'accueil'}
               onClick={() => setActiveTab('accueil')}
             />
             <NavItem
-              icon={<IconPuzzle />}
+              icon={<GalleryVerticalEndIcon />}
               label="Sources"
               active={activeTab === 'sources'}
               onClick={() => setActiveTab('sources')}
             />
             <NavItem
-              icon={<IconPlug />}
+              icon={<ToyBrickIcon />}
               label="Extension"
               active={activeTab === 'extension'}
               onClick={() => setActiveTab('extension')}
             />
 
             <NavItem
-              icon={<IconSettings />}
+              icon={<FlaskConicalIcon />}
+              label="POC"
+              active={activeTab === 'poc'}
+              onClick={() => setActiveTab('poc')}
+            />
+            <NavItem
+              icon={<SettingsIcon />}
               label="Settings"
               isBottom={true}
               active={activeTab === 'settings'}
@@ -51,6 +64,7 @@ const App: React.FC = () => {
         {/* Rendu conditionnel des pages */}
         {activeTab === 'accueil' && <PageAccueil />}
         {activeTab === 'sources' && <PageSources />}
+        {activeTab === 'poc' && <PocApp />}
       </div>
     </div>
   );

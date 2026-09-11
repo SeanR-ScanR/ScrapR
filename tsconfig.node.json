@@ -3,6 +3,8 @@
   "include": ["electron.vite.config.*", "src/main/**/*", "src/preload/**/*"],
   "compilerOptions": {
     "composite": true,
+    "target": "ES2024",
+    "lib": ["ES2024"],
     "types": ["electron-vite/node"]
   }
 }

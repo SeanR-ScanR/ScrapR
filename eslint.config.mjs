@@ -11,6 +11,9 @@ export default defineConfig(
   eslintPluginReact.configs.flat.recommended,
   eslintPluginReact.configs.flat['jsx-runtime'],
   {
+    languageOptions: {
+      ecmaVersion: 2024
+    },
     settings: {
       react: {
         version: 'detect'

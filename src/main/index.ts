@@ -1,6 +1,9 @@
 import { app, shell, BrowserWindow, ipcMain } from 'electron';
 import { join } from 'path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
+import ynjnPlugin from './ynjnPlugin';
+import { getContextPath, getDescriptor } from './utils/ContextUtils';
+import { Kind } from './pluginTypes';
 
 function createWindow(): void {
   // Create the browser window.
@@ -48,8 +51,23 @@ app.whenReady().then(() => {
     optimizer.watchWindowShortcuts(window);
   });
 
-  // IPC test
-  ipcMain.on('ping', () => console.log('pong'));
+  ipcMain.handle('rootNodeKeys:get', () => {
+    return Object.keys(ynjnPlugin.descriptors).filter((d) => !d.startsWith('_'));
+  });
+
+  ipcMain.handle('availableActions:get', async (_, ctx: any, nodeKey: Kind) => {
+    const descriptor = getDescriptor(ynjnPlugin.descriptors, [...getContextPath(ctx), nodeKey]);
+    console.log(ctx, descriptor);
+    // @ts-ignore
+    return Object.keys(descriptor?._do);
+  });
+
+  ipcMain.handle('action:do', async (_, ctx: any, nodeKey: Kind, action: string, ...args) => {
+    const descriptor = getDescriptor(ynjnPlugin.descriptors, [...getContextPath(ctx), nodeKey]);
+    console.log(ctx, descriptor);
+    // @ts-ignore
+    return descriptor?._do[action](ctx, ...args);
+  });
 
   createWindow();
 

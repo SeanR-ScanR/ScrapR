@@ -8,7 +8,9 @@
   ],
   "compilerOptions": {
     "composite": true,
+    "target": "ES2024",
     "jsx": "react-jsx",
+    "lib": ["ES2024", "DOM", "DOM.Iterable"],
     "baseUrl": ".",
     "paths": {
       "@renderer/*": [

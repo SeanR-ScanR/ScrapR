@@ -1,11 +1,11 @@
 import React from 'react';
 import ListItemProps from '@renderer/interfaces/ListItemProps';
-import { IconImage, IconSettings, IconTrash } from '@renderer/components/icons';
+import { ImageOffIcon, SettingsIcon, TrashIcon } from 'lucide-react';
 
 const ListItem: React.FC<ListItemProps> = ({ title, lang }) => (
   <div className="list-item">
     <div className="list-item-image">
-      <IconImage />
+      <ImageOffIcon />
     </div>
     <div className="list-item-content">
       <span className="list-item-title">{title}</span>
@@ -13,10 +13,10 @@ const ListItem: React.FC<ListItemProps> = ({ title, lang }) => (
     </div>
     <div className="list-item-actions">
       <div className="action-icon">
-        <IconTrash />
+        <TrashIcon />
       </div>
       <div className="action-icon">
-        <IconSettings />
+        <SettingsIcon />
       </div>
     </div>
   </div>
