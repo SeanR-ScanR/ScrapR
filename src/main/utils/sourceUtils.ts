@@ -28,7 +28,7 @@ export function resolveSource(
 ): Source {
   const matches = listSources(pluginId, plugins).filter((source) => source.id === sourceId);
   const source = matches[0];
-  if (!source) throw new Error(`La source « ${sourceId} » est introuvable.`);
-  if (matches.length > 1) throw new Error(`L’identifiant de source « ${sourceId} » est ambigu.`);
+  if (!source) throw new Error(`La source "${sourceId}" est introuvable.`);
+  if (matches.length > 1) throw new Error(`L’identifiant de source "${sourceId}" est ambigu.`);
   return source;
 }

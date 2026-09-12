@@ -140,7 +140,7 @@ export function DescriptorBrowser({
             </Text>
           )}
           <Heading size="3">
-            {browser.query ? `Résultats pour « ${browser.query} »` : 'Suggestions'}
+            {browser.query ? `Résultats pour "${browser.query}"` : 'Suggestions'}
           </Heading>
           <RequestState
             loading={browser.loading}

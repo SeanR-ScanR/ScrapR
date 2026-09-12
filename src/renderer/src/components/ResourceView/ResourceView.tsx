@@ -52,7 +52,7 @@ export function ResourceView({
                   />
                 ) : (
                   <Text color="gray">
-                    Aucune ressource disponible dans la catégorie « {descriptorLabels[kind]} ».
+                    Aucune ressource disponible dans la catégorie "{descriptorLabels[kind]}".
                   </Text>
                 )}
               </PageSection>

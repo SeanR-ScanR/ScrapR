@@ -42,7 +42,6 @@ type TerminalKind = {
   [K in DescriptorKind]: DescriptorDefinitions[K]['terminal'] extends true ? K : never;
 }[DescriptorKind];
 
-// Callers supply the per-kind mapping because dynamic iteration loses key/schema correlation.
 function mapDescriptorSchemas<Schemas extends Record<DescriptorKind, z.ZodType>>(
   create: (kind: DescriptorKind) => z.ZodType
 ): Schemas {
@@ -83,7 +82,6 @@ export type ParentPath<Parents extends readonly AnyEntity[]> = {
 export function getParentPath<const Parents extends readonly AnyEntity[]>(
   parents: Parents
 ): ParentPath<Parents> {
-  // Array.map preserves order and length but does not retain tuple types.
   return parents.map((parent) => parent.kind) as ParentPath<Parents>;
 }
 
@@ -105,7 +103,6 @@ type DescriptorPaths<
 
 export type DescriptorPath = DescriptorPaths;
 
-// Ancestor paths can be empty; complete descriptor paths cannot.
 const AncestorPathSchema = DescriptorKindSchema.array().superRefine((path, ctx) => {
   const seen = new Set<DescriptorKind>();
   path.forEach((kind, index) => {
@@ -128,7 +125,6 @@ const AncestorPathSchema = DescriptorKindSchema.array().superRefine((path, ctx) 
 });
 
 export const DescriptorPathSchema = AncestorPathSchema.nonempty()
-  // Zod refinements validate the recursive tuple constraints without narrowing the array type.
   .transform((path): DescriptorPath => path as DescriptorPath);
 
 function getChildKinds(kind: DescriptorKind, path: readonly DescriptorKind[]): DescriptorKind[] {
@@ -202,7 +198,6 @@ export const EntitySchemas = mapDescriptorSchemas<{
 function descriptorSchemaValues<Schemas extends Record<DescriptorKind, z.ZodType>>(
   schemas: Schemas
 ): [Schemas[DescriptorKind], ...Schemas[DescriptorKind][]] {
-  // The descriptor enum guarantees a nonempty, complete registry.
   return Object.values(schemas) as [Schemas[DescriptorKind], ...Schemas[DescriptorKind][]];
 }
 
@@ -233,8 +228,6 @@ export type ContextOf<Path extends readonly DescriptorKind[] = []> = z.infer<
   z.ZodObject<ContextShape<Path>, z.core.$strict>
 >;
 
-// Infer the operation signatures from their argument and result schemas.
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 function createDescriptorOpsSchema<
   This extends DescriptorKind,
   const Path extends readonly DescriptorKind[]

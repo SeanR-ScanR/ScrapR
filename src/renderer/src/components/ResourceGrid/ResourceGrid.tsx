@@ -13,7 +13,7 @@ export interface ResourceGridProps {
 
 export function ResourceGrid({ entries, canOpen, busy, onOpen }: ResourceGridProps): ReactElement {
   return (
-    <Grid columns={{ initial: '1', sm: '2', lg: '3' }} gap="3">
+    <Grid columns={{ initial: '1', sm: '2', md: '3', lg: '4' }} gap="3">
       {entries.map((entry, index) => (
         <ResourceCard.Root key={`${entry.kind}:${entry.id}:${index}`}>
           <Flex direction="column" gap="3" style={{ overflowWrap: 'anywhere' }}>

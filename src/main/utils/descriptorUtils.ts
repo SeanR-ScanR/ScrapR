@@ -37,7 +37,7 @@ export function resolveDescriptor(source: Source, path: DescriptorPath | [] = []
     const child = Object.hasOwn(node, kind) ? node[kind] : undefined;
     if (!child) {
       throw new Error(
-        `La source « ${source.id} » ne prend pas en charge le chemin de ressources « ${parsedPath.join('/')} ».`
+        `La source "${source.id}" ne prend pas en charge le chemin de ressources "${parsedPath.join('/')}".`
       );
     }
     node = child;
@@ -94,7 +94,7 @@ export async function getDescriptorSuggestions(
   const operation = resolveDescriptor(source, [kind])._do?.suggestions;
   if (typeof operation !== 'function') {
     throw new Error(
-      `La source « ${source.id} » ne propose pas de suggestions pour le type « ${kind} ».`
+      `La source "${source.id}" ne propose pas de suggestions pour le type "${kind}".`
     );
   }
   const suggestions = operation as NonNullable<DescriptorOf['_do']['suggestions']>;
@@ -139,7 +139,7 @@ export async function searchDescriptor(
   const operation = resolved.node._do?.search;
   if (typeof operation !== 'function') {
     throw new Error(
-      `La source « ${source.id} » ne permet pas la recherche pour le type « ${resolved.kind} ».`
+      `La source "${source.id}" ne permet pas la recherche pour le type "${resolved.kind}".`
     );
   }
   const search = operation as NonNullable<ContextOperations['search']>;
@@ -161,7 +161,7 @@ export async function getDescriptorResource(
   const operation = resolved.node._do?.get;
   if (typeof operation !== 'function') {
     throw new Error(
-      `La source « ${source.id} » ne permet pas de récupérer les ressources de type « ${resolved.kind} ».`
+      `La source "${source.id}" ne permet pas de récupérer les ressources de type "${resolved.kind}".`
     );
   }
   const get = operation as NonNullable<ContextOperations['get']>;
@@ -188,7 +188,7 @@ export async function parseDescriptorUrl(
   const operation = resolved.node._do?.parseUrl;
   if (typeof operation !== 'function') {
     throw new Error(
-      `La source « ${source.id} » ne permet pas de récupérer une ressource de type « ${resolved.kind} » à partir d’une URL.`
+      `La source "${source.id}" ne permet pas de récupérer une ressource de type "${resolved.kind}" à partir d’une URL.`
     );
   }
   const parseUrl = operation as NonNullable<ContextOperations['parseUrl']>;
