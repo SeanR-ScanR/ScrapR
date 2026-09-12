@@ -1,0 +1,16 @@
+.header,
+.sidebar {
+  background: var(--gray-2);
+}
+
+.header {
+  border-bottom: 1px solid var(--gray-6);
+}
+
+.sidebar {
+  border-right: 1px solid var(--gray-6);
+}
+
+.content {
+  background: var(--color-background);
+}
