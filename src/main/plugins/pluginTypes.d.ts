@@ -126,7 +126,7 @@ type DescriptorOps<This extends Kind, Path extends readonly Kind[] = []> = {
       context: ContextOf<Path>,
       id: EntityBaseMap[This]['id']
     ) => Promise<EntityOf<This, Path>>;
-  };
+  } & (Path extends readonly [] ? { suggestions?: () => Promise<PreviewMap[This][]> } : {});
 };
 
 type DescriptorChildren<This extends Kind, Path extends readonly Kind[] = []> = Partial<{
@@ -178,7 +178,6 @@ export type Suggestions = Partial<{
 
 export type Plugin = {
   name: string;
-  suggestions?: () => Promise<Suggestions>;
   descriptors: Partial<{
     [K in Kind]: DescriptorOf<K>;
   }>;
