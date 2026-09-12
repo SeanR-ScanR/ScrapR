@@ -1,6 +1,7 @@
 import internalPluginRepository from '../plugins/internalPluginRepository';
 import { extractSourceMetadata, listSources, resolveSource } from '../utils/sourceUtils';
 import {
+  discoverDescriptorUrl,
   getDescriptorCapabilities,
   getDescriptorResource,
   getDescriptorSuggestions,
@@ -42,11 +43,13 @@ export function registerSourceHandlers(): void {
       id
     )
   );
-  handle('plugin.source.descriptor.resource:parseUrl', (pluginId, sourceId, parents, kind, url) =>
+  handle('plugin.source.descriptor.resource:discoverUrl', (url, scope) =>
+    discoverDescriptorUrl(internalPluginRepository, new URL(url), scope)
+  );
+  handle('plugin.source.descriptor.resource:parseUrl', (pluginId, sourceId, path, url) =>
     parseDescriptorUrl(
       resolveSource(pluginId, sourceId, internalPluginRepository),
-      parents,
-      kind,
+      path,
       new URL(url)
     )
   );

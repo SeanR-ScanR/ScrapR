@@ -1,4 +1,9 @@
-import { type IpcArguments, type IpcChannel, IpcContracts, type IpcResult } from '@shared/ipcContractTypes';
+import {
+  type IpcArguments,
+  type IpcChannel,
+  IpcContracts,
+  type IpcResult
+} from '@shared/ipcContractTypes';
 
 export async function invoke<Channel extends IpcChannel>(
   channel: Channel,

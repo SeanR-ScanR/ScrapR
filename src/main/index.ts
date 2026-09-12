@@ -4,6 +4,7 @@ import { electronApp, is, optimizer } from '@electron-toolkit/utils';
 import icon from '@shared/assets/icon.png?asset';
 import { registerSourceHandlers } from './ipc/source';
 import { registerPluginHandlers } from './ipc/plugin';
+import { titleBarBackground } from '@shared/windowTheme';
 
 function createWindow(): void {
   // Create the browser window.
@@ -12,6 +13,16 @@ function createWindow(): void {
     height: 670,
     show: false,
     autoHideMenuBar: true,
+    titleBarStyle: 'hidden',
+    ...(process.platform === 'darwin'
+      ? { trafficLightPosition: { x: 16, y: 16 } }
+      : {
+          titleBarOverlay: {
+            color: titleBarBackground,
+            symbolColor: '#edeef0',
+            height: 48
+          }
+        }),
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),

@@ -1,0 +1,48 @@
+.titleBar {
+  --controls-left: 0px;
+  height: 48px;
+  min-width: 0;
+  padding-left: calc(env(titlebar-area-x, var(--controls-left)) + 16px);
+  padding-right: 32px;
+  -webkit-app-region: drag;
+  user-select: none;
+}
+
+.titleBar[data-platform='darwin'] {
+  --controls-left: 80px;
+}
+
+.titleBar[data-platform='win32'],
+.titleBar[data-platform='linux'] {
+  padding-right: max(
+    32px,
+    calc(100% - env(titlebar-area-x, 0px) - env(titlebar-area-width, calc(100% - 144px)) + 32px)
+  );
+}
+
+.navigation,
+.urlParser {
+  -webkit-app-region: no-drag;
+}
+
+.urlParser {
+  user-select: text;
+}
+
+@media (max-width: 600px) {
+  .titleBar {
+    gap: 8px;
+    height: 96px;
+    flex-wrap: wrap;
+    padding: 0 16px !important;
+    align-content: space-around;
+  }
+
+  .navigation {
+    margin-left: var(--controls-left);
+  }
+
+  .urlParser {
+    flex-basis: 100%;
+  }
+}

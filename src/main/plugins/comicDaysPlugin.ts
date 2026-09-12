@@ -3,10 +3,12 @@ import { Descriptors } from '@shared/pluginTypes';
 import axios from 'axios';
 import { HTMLElement, parse } from 'node-html-parser';
 
-const userAgent =
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36';
-
-const aFetch = axios.create();
+const aFetch = axios.create({
+  headers: {
+    'User-Agent':
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36'
+  }
+});
 
 const comicDaysPlugin: Plugin = {
   id: 'comic-days',
@@ -20,11 +22,7 @@ const comicDaysPlugin: Plugin = {
         series: {
           _do: {
             search: async (_, query) => {
-              const apiRes = await aFetch.get(`https://comic-days.com/search?q=${query}`, {
-                headers: {
-                  'user-agent': userAgent
-                }
-              });
+              const apiRes = await aFetch.get(`https://comic-days.com/search?q=${query}`);
               const resString = apiRes.data;
               const document = parse(resString);
               const seriesHtml: HTMLElement[] = document.querySelectorAll(

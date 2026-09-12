@@ -124,8 +124,9 @@ const AncestorPathSchema = DescriptorKindSchema.array().superRefine((path, ctx) 
   });
 });
 
-export const DescriptorPathSchema = AncestorPathSchema.nonempty()
-  .transform((path): DescriptorPath => path as DescriptorPath);
+export const DescriptorPathSchema = AncestorPathSchema.nonempty().transform(
+  (path): DescriptorPath => path as DescriptorPath
+);
 
 function getChildKinds(kind: DescriptorKind, path: readonly DescriptorKind[]): DescriptorKind[] {
   return descriptorDefinitions[kind].terminal
@@ -209,6 +210,48 @@ export const AnyEntitySchema = z.discriminatedUnion('kind', descriptorSchemaValu
 export type AnyPreview = z.infer<typeof AnyPreviewSchema>;
 export type AnyEntity = z.infer<typeof AnyEntitySchema>;
 
+export const UrlDiscoveryScopeSchema = z.strictObject({
+  pluginId: z.string(),
+  sourceId: z.string().optional()
+});
+export type UrlDiscoveryScope = z.infer<typeof UrlDiscoveryScopeSchema>;
+export const UrlDiscoveryResultSchema = z.strictObject({
+  matches: z.array(
+    z.strictObject({
+      pluginId: z.string(),
+      sourceId: z.string(),
+      pluginName: z.string(),
+      sourceName: z.string(),
+      path: DescriptorPathSchema
+    })
+  ),
+  errors: z.string().array()
+});
+export type UrlDiscoveryResult = z.infer<typeof UrlDiscoveryResultSchema>;
+export type UrlParseResult = { parents: AnyEntity[]; entity: AnyEntity };
+
+export function createUrlParseResultSchema(path: DescriptorPath): z.ZodType<UrlParseResult> {
+  const parsedPath = DescriptorPathSchema.parse(path);
+  const ancestors = parsedPath.slice(0, -1);
+  return z.strictObject({
+    parents: AnyEntitySchema.array()
+      .length(ancestors.length)
+      .superRefine((parents, ctx) => {
+        ancestors.forEach((kind, index) => {
+          const result = createEntitySchema(kind, ancestors.slice(0, index)).safeParse(
+            parents[index]
+          );
+          if (!result.success) {
+            for (const issue of result.error.issues) {
+              ctx.addIssue({ ...issue, path: [index, ...issue.path] });
+            }
+          }
+        });
+      }),
+    entity: createEntitySchema(parsedPath[parsedPath.length - 1], ancestors)
+  });
+}
+
 type ContextShape<Path extends readonly DescriptorKind[]> = {
   _parents: z.ZodType<{ -readonly [I in keyof Path]: EntityOf<Path[I]> }>;
 } & { [K in Path[number]]: EntitySchema<K, []> };
@@ -228,6 +271,7 @@ export type ContextOf<Path extends readonly DescriptorKind[] = []> = z.infer<
   z.ZodObject<ContextShape<Path>, z.core.$strict>
 >;
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type -- Preserve inferred operation schemas and conditional root suggestions.
 function createDescriptorOpsSchema<
   This extends DescriptorKind,
   const Path extends readonly DescriptorKind[]
@@ -236,10 +280,13 @@ function createDescriptorOpsSchema<
   const entity = createEntitySchema(kind, path);
   const previews = PreviewSchemas[kind].array();
   const operations = {
+    canParseUrl: z
+      .function({ input: [z.instanceof(URL)], output: z.promise(z.boolean()) })
+      .optional(),
     parseUrl: z
       .function({
-        input: [context, z.instanceof(URL)],
-        output: z.promise(entity.optional())
+        input: [z.instanceof(URL)],
+        output: z.promise(createUrlParseResultSchema(DescriptorPathSchema.parse([...path, kind])))
       })
       .optional(),
     search: z.function({ input: [context, z.string()], output: z.promise(previews) }).optional(),

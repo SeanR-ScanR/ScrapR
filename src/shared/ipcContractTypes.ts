@@ -2,13 +2,16 @@ import { z } from 'zod';
 import {
   AnyEntitySchema,
   createResourceSchema,
+  createUrlParseResultSchema,
   DescriptorKindSchema,
   DescriptorMetadataSchema,
   DescriptorOperationSchema,
   DescriptorPathSchema,
   PluginMetadataSchema,
   PreviewSchemas,
-  SourceMetadataSchema
+  SourceMetadataSchema,
+  UrlDiscoveryScopeSchema,
+  UrlDiscoveryResultSchema
 } from './pluginTypes';
 
 const pluginId = PluginMetadataSchema.shape.id;
@@ -53,9 +56,13 @@ export const IpcContracts = {
   'plugin.source.descriptor.resource:get': contract(resourceInput, ([, , parents, kind]) =>
     createResourceSchema(kind, parents)
   ),
+  'plugin.source.descriptor.resource:discoverUrl': contract(
+    z.tuple([z.url(), UrlDiscoveryScopeSchema.optional()]),
+    () => UrlDiscoveryResultSchema
+  ),
   'plugin.source.descriptor.resource:parseUrl': contract(
-    z.tuple([pluginId, sourceId, parents, DescriptorKindSchema, z.url()]),
-    ([, , parents, kind]) => createResourceSchema(kind, parents).optional()
+    z.tuple([pluginId, sourceId, DescriptorPathSchema, z.url()]),
+    ([, , path]) => createUrlParseResultSchema(path)
   )
 };
 

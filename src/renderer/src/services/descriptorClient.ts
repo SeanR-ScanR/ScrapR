@@ -7,7 +7,10 @@ import type {
   DescriptorPath,
   EntityOf,
   ParentPath,
-  PreviewOf
+  PreviewOf,
+  UrlDiscoveryScope,
+  UrlDiscoveryResult,
+  UrlParseResult
 } from '@shared/pluginTypes';
 import { invoke } from './ipcClient';
 
@@ -81,28 +84,25 @@ function get(
   return invoke('plugin.source.descriptor.resource:get', pluginId, sourceId, parents, kind, id);
 }
 
-function parseUrl<K extends DescriptorKind, const Parents extends readonly AnyEntity[]>(
-  pluginId: string,
-  sourceId: string,
-  parents: Parents,
-  kind: K,
-  url: string
-): Promise<EntityOf<K, ParentPath<Parents>> | undefined>;
 function parseUrl(
   pluginId: string,
   sourceId: string,
-  parents: readonly AnyEntity[],
-  kind: DescriptorKind,
+  path: DescriptorPath,
   url: string
-): Promise<AnyEntity | undefined> {
-  return invoke(
-    'plugin.source.descriptor.resource:parseUrl',
-    pluginId,
-    sourceId,
-    parents,
-    kind,
-    url
-  );
+): Promise<UrlParseResult> {
+  return invoke('plugin.source.descriptor.resource:parseUrl', pluginId, sourceId, path, url);
 }
 
-export const descriptorClient = { list, capabilities, suggestions, search, get, parseUrl };
+function discoverUrl(url: string, scope?: UrlDiscoveryScope): Promise<UrlDiscoveryResult> {
+  return invoke('plugin.source.descriptor.resource:discoverUrl', url, scope);
+}
+
+export const descriptorClient = {
+  list,
+  capabilities,
+  suggestions,
+  search,
+  get,
+  parseUrl,
+  discoverUrl
+};

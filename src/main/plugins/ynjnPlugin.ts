@@ -3,7 +3,9 @@ import { Descriptors } from '@shared/pluginTypes';
 import axios from 'axios';
 import { z } from 'zod';
 
-const aFetch = axios.create();
+const aFetch = axios.create({
+  baseURL: 'https://webapi.ynjn.jp'
+});
 
 const idSchema = z.union([z.string(), z.number()]).transform(String);
 const titleSchema = z.object({ id: idSchema, name: z.string() });
@@ -16,6 +18,59 @@ const mangaPageSchema = z.object({
 });
 
 const chapterPagesCache = new Map<PreviewOf<'chapter'>['id'], z.infer<typeof mangaPageSchema>[]>();
+
+function matchUrl(url: URL): { magazineId?: string; chapterId?: string } | undefined {
+  if (!['http:', 'https:'].includes(url.protocol) || url.hostname !== 'ynjn.jp' || url.port)
+    return undefined;
+  const match = /^\/(title|viewer)\/([1-9]\d*)(?:\/([1-9]\d*))?\/?$/.exec(url.pathname);
+  if (match) return { magazineId: match[2], chapterId: match[3] };
+  const chapter = /^\/episode\/([1-9]\d*)\/?$/.exec(url.pathname);
+  return chapter ? { chapterId: chapter[1] } : undefined;
+}
+
+async function fetchMagazine(id: string): Promise<EntityOf<'magazine'>> {
+  const globalRes = z
+    .object({
+      data: z.object({
+        book: z.object({ title_id: idSchema, name: z.string(), summary: z.string() })
+      })
+    })
+    .parse((await aFetch.get<unknown>('/book/' + id)).data).data.book;
+  const chaptersRes = z
+    .object({
+      data: z.object({ episodes: z.array(titleSchema) })
+    })
+    .parse(
+      (
+        await aFetch.get<unknown>('/title/' + id + '/episode', {
+          params: { isGetAll: true }
+        })
+      ).data
+    ).data.episodes;
+  return {
+    kind: Descriptors.MAGAZINE,
+    id: globalRes.title_id,
+    title: globalRes.name,
+    description: globalRes.summary,
+    has: {
+      chapter: chaptersRes.map((e) => ({ kind: Descriptors.CHAPTER, id: e.id, title: e.name }))
+    }
+  };
+}
+
+async function fetchChapterEntity(
+  magazineId: string,
+  id: string
+): Promise<EntityOf<'chapter', ['magazine']>> {
+  const { navigation, pages } = await fetchChapter(magazineId, id);
+  return {
+    kind: Descriptors.CHAPTER,
+    id: navigation.id,
+    title: navigation.name,
+    description: navigation.share_text,
+    has: { page: pages.map((p) => ({ kind: Descriptors.PAGE, id: p.page_id })) }
+  };
+}
 
 async function fetchChapter(
   magazineId: PreviewOf<'magazine'>['id'],
@@ -33,7 +88,7 @@ async function fetchChapter(
     })
     .parse(
       (
-        await aFetch.get<unknown>('https://webapi.ynjn.jp/viewer', {
+        await aFetch.get<unknown>('/viewer', {
           params: {
             titleId: magazineId,
             episodeId: chapterId,
@@ -59,9 +114,17 @@ const ynjnPlugin: Plugin = {
       descriptors: {
         magazine: {
           _do: {
+            canParseUrl: async (url) => {
+              const match = matchUrl(url);
+              return !!match?.magazineId && !match.chapterId && url.pathname.startsWith('/title/');
+            },
+            parseUrl: async (url) => {
+              const match = matchUrl(url);
+              return { parents: [], entity: await fetchMagazine(match!.magazineId!) };
+            },
             search: async (_, query) => {
               const apiRes = await aFetch.get<unknown>(
-                'https://webapi.ynjn.jp/title/category/TEXT',
+                '/title/category/TEXT',
                 {
                   params: {
                     category: 'TEXT',
@@ -81,44 +144,9 @@ const ynjnPlugin: Plugin = {
               console.log(res);
               return res;
             },
-            get: async (_, id) => {
-              const globalRes = z
-                .object({
-                  data: z.object({
-                    book: z.object({ title_id: idSchema, name: z.string(), summary: z.string() })
-                  })
-                })
-                .parse((await aFetch.get<unknown>('https://webapi.ynjn.jp/book/' + id)).data)
-                .data.book;
-              const chaptersRes = z
-                .object({
-                  data: z.object({ episodes: z.array(titleSchema) })
-                })
-                .parse(
-                  (
-                    await aFetch.get<unknown>('https://webapi.ynjn.jp/title/' + id + '/episode', {
-                      params: { isGetAll: true }
-                    })
-                  ).data
-                ).data.episodes;
-              const res: EntityOf<'magazine'> = {
-                kind: Descriptors.MAGAZINE,
-                id: globalRes.title_id,
-                title: globalRes.name,
-                description: globalRes.summary,
-                has: {
-                  chapter: chaptersRes.map((e): PreviewOf<'chapter'> => ({
-                    kind: Descriptors.CHAPTER,
-                    id: e.id,
-                    title: e.name
-                  }))
-                }
-              };
-              console.log(res);
-              return res;
-            },
+            get: async (_, id) => fetchMagazine(id),
             suggestions: async () => {
-              const apiRes = await aFetch.get<unknown>('https://webapi.ynjn.jp/title/feature', {
+              const apiRes = await aFetch.get<unknown>('/title/feature', {
                 params: {
                   displayLocation: 'TOP_PAGE_5',
                   page: 1
@@ -137,21 +165,27 @@ const ynjnPlugin: Plugin = {
           },
           chapter: {
             _do: {
-              get: async (context, id) => {
-                const { navigation, pages } = await fetchChapter(context.magazine.id, id);
+              canParseUrl: async (url) => !!matchUrl(url)?.chapterId,
+              parseUrl: async (url) => {
+                const match = matchUrl(url);
+                const { title_id: magazineId } = z
+                  .object({
+                    data: z.object({ action_sheet: z.object({ title_id: idSchema }) })
+                  })
+                  .parse(
+                    (
+                      await aFetch.get<unknown>(
+                        `/episode/${match!.chapterId!}/action_sheet`
+                      )
+                    ).data
+                  ).data.action_sheet;
+                const magazine = await fetchMagazine(magazineId);
                 return {
-                  kind: Descriptors.CHAPTER,
-                  id: navigation.id,
-                  title: navigation.name,
-                  description: navigation.share_text,
-                  has: {
-                    page: pages.map((p): PreviewOf<'page'> => ({
-                      kind: Descriptors.PAGE,
-                      id: p.page_id
-                    }))
-                  }
+                  parents: [magazine],
+                  entity: await fetchChapterEntity(magazineId, match!.chapterId!)
                 };
-              }
+              },
+              get: async (context, id) => fetchChapterEntity(context.magazine.id, id)
             },
             page: {
               _do: {
@@ -160,9 +194,6 @@ const ynjnPlugin: Plugin = {
                     chapterPagesCache.get(context.chapter.id) ??
                     (await fetchChapter(context.magazine.id, context.chapter.id)).pages;
                   const rawPageData = pages.find((p) => p.page_id === id);
-                  if (!rawPageData) {
-                    throw new Error(`Page ${id} was not found in chapter ${context.chapter.id}`);
-                  }
                   console.log(rawPageData);
                   const res = z
                     .object({
@@ -172,7 +203,7 @@ const ynjnPlugin: Plugin = {
                       })
                     })
                     .parse(
-                      await aFetch.get<unknown>(rawPageData.page_image_url, {
+                      await aFetch.get<unknown>(rawPageData!.page_image_url, {
                         responseType: 'arraybuffer'
                       })
                     );

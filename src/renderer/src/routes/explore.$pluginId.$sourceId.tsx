@@ -1,12 +1,20 @@
-import { createFileRoute, type ErrorComponentProps, Link, useRouter } from '@tanstack/react-router';
+import {
+  createFileRoute,
+  type ErrorComponentProps,
+  Link,
+  useRouter,
+  useLocation
+} from '@tanstack/react-router';
 import { Text } from '@radix-ui/themes';
 import PageExplore from '@renderer/pages/PageExplore/PageExplore';
 import { PageSection } from '@renderer/components/PageSection/PageSection';
 import { RequestState } from '@renderer/components/RequestState/RequestState';
 import type { SourceMetadata } from '@shared/pluginTypes';
 import { repositoryClient } from '@renderer/services/repositoryClient';
+import { validateExploreSearch } from '@renderer/services/exploreNavigation';
 
 export const Route = createFileRoute('/explore/$pluginId/$sourceId')({
+  validateSearch: validateExploreSearch,
   loader: async ({ params }): Promise<SourceMetadata> => {
     const plugins = await repositoryClient.listPlugins();
     const plugin = plugins.find((plugin) => plugin.id === params.pluginId);
@@ -43,7 +51,18 @@ function ExploreError({ error }: ErrorComponentProps): React.JSX.Element {
 function ExploreRoute(): React.JSX.Element {
   const source = Route.useLoaderData();
   const { pluginId } = Route.useParams();
+  const search = Route.useSearch();
+  const navigate = Route.useNavigate();
+  const location = useLocation();
   return (
-    <PageExplore key={JSON.stringify([pluginId, source.id])} pluginId={pluginId} source={source} />
+    <PageExplore
+      key={JSON.stringify([location.href, location.state.__TSR_key])}
+      pluginId={pluginId}
+      source={source}
+      search={search}
+      navigate={(search) => {
+        void navigate({ search });
+      }}
+    />
   );
 }

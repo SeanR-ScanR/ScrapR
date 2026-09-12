@@ -9,11 +9,14 @@ import { ResourceGrid } from '@renderer/components/ResourceGrid/ResourceGrid';
 import { ResourceView } from '@renderer/components/ResourceView/ResourceView';
 import { useDescriptorBrowser } from '@renderer/hooks/useDescriptorBrowser';
 import { descriptorLabels, resourceTitle } from '@renderer/utils/resourcePresentation';
+import type { ExploreSearch } from '@renderer/services/exploreNavigation';
 
 export interface DescriptorBrowserProps {
   pluginId: string;
   source: SourceMetadata;
   descriptor: DescriptorMetadata;
+  search: ExploreSearch;
+  navigate: (search: ExploreSearch) => void;
   breadcrumbs?: ReactNode;
 }
 
@@ -21,23 +24,12 @@ export function DescriptorBrowser({
   pluginId,
   source,
   descriptor,
+  search,
+  navigate,
   breadcrumbs
 }: DescriptorBrowserProps): ReactElement {
-  const browser = useDescriptorBrowser(pluginId, source.id, descriptor);
-  const [input, setInput] = useState('');
-  const [scope, setScope] = useState({
-    pluginId,
-    sourceId: source.id,
-    kind: descriptor.kind
-  });
-  if (
-    scope.pluginId !== pluginId ||
-    scope.sourceId !== source.id ||
-    scope.kind !== descriptor.kind
-  ) {
-    setScope({ pluginId, sourceId: source.id, kind: descriptor.kind });
-    setInput('');
-  }
+  const browser = useDescriptorBrowser(pluginId, source.id, descriptor, search, navigate);
+  const [input, setInput] = useState(browser.query);
   const canSearch = descriptor.operations.includes('search');
   const label = descriptorLabels[descriptor.kind];
 
@@ -89,7 +81,17 @@ export function DescriptorBrowser({
           {browser.detailError}
         </Text>
       )}
-      {browser.current ? (
+      {browser.expired ? (
+        <Flex direction="column" gap="2">
+          <Text role="alert">
+            Cette ressource a expiré ou n’est plus disponible dans cette session. Ouvrez son URL à
+            nouveau ou revenez aux resultats.
+          </Text>
+          <Button variant="soft" onClick={() => browser.back(0)} style={{ alignSelf: 'start' }}>
+            Retour aux resultats
+          </Button>
+        </Flex>
+      ) : browser.current ? (
         <>
           <ResourceView
             resource={browser.current}

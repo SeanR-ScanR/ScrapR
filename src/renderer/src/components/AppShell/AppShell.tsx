@@ -1,6 +1,7 @@
 import { Flex, type FlexProps } from '@radix-ui/themes';
 import type { ComponentPropsWithoutRef, ReactElement } from 'react';
 import AppTheme from '../AppTheme/AppTheme';
+import { titleBarBackground } from '@shared/windowTheme';
 import styles from './AppShell.module.css';
 
 export function Root(props: FlexProps): ReactElement {
@@ -10,7 +11,14 @@ export function Root(props: FlexProps): ReactElement {
 export function Header(props: ComponentPropsWithoutRef<'header'>): ReactElement {
   return (
     <AppTheme>
-      <Flex asChild flexShrink="0" px="4" py="2" className={styles.header}>
+      <Flex
+        asChild
+        flexShrink="0"
+        px="4"
+        py="2"
+        className={styles.header}
+        style={{ backgroundColor: titleBarBackground }}
+      >
         <header {...props} />
       </Flex>
     </AppTheme>
