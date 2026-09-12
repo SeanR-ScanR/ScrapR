@@ -2,8 +2,9 @@ import { Button, Dialog, Flex, Popover, RadioGroup, Spinner, Text } from '@radix
 import { LinkIcon } from 'lucide-react';
 import { useEffect, useRef, useState, type ReactElement } from 'react';
 import { useNavigate, useRouter } from '@tanstack/react-router';
+import { useQueryClient } from '@tanstack/react-query';
 import * as UrlForm from '@renderer/components/UrlForm/UrlForm';
-import { descriptorClient } from '@renderer/services/descriptorClient';
+import { descriptorQueries } from '@renderer/services/ipcQueries';
 import { cacheParsedResource } from '@renderer/services/exploreNavigation';
 import { descriptorLabels } from '@renderer/utils/resourcePresentation';
 import type { UrlDiscoveryResult } from '@shared/pluginTypes';
@@ -13,6 +14,7 @@ type Match = UrlDiscoveryResult['matches'][number];
 export function UrlParser(): ReactElement {
   const navigate = useNavigate();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const request = useRef(0);
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -43,11 +45,8 @@ export function UrlParser(): ReactElement {
   async function parse(match: Match, value: string, id: number): Promise<void> {
     setBusy(true);
     try {
-      const result = await descriptorClient.parseUrl(
-        match.pluginId,
-        match.sourceId,
-        match.path,
-        value
+      const result = await queryClient.query(
+        descriptorQueries.parseUrl(match.pluginId, match.sourceId, match.path, value)
       );
       if (request.current !== id) return;
       const resource = cacheParsedResource(match.pluginId, match.sourceId, result);
@@ -79,7 +78,7 @@ export function UrlParser(): ReactElement {
       if (!['https:', 'http:'].includes(parsed.protocol)) {
         throw new Error('Utilisez une URL HTTP ou HTTPS.');
       }
-      const result = await descriptorClient.discoverUrl(parsed.href);
+      const result = await queryClient.query(descriptorQueries.discoverUrl(parsed.href));
       if (request.current !== id) return;
       setMatches(result.matches);
       setErrors(result.errors);

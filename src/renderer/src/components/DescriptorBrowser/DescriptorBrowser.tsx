@@ -146,6 +146,8 @@ export function DescriptorBrowser({
           </Heading>
           <RequestState
             loading={browser.loading}
+            fetching={browser.fetching}
+            hasData={browser.hasData}
             error={browser.error}
             onRetry={() => browser.search(browser.query)}
             loadingLabel="Chargement des ressources..."

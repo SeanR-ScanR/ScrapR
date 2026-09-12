@@ -9,7 +9,7 @@ import { usePlugins } from '@renderer/hooks/useRepository';
 import { Link } from '@tanstack/react-router';
 
 export default function PageSources(): ReactElement {
-  const { items: plugins, loading, error, retry } = usePlugins();
+  const { items: plugins, loading, fetching, hasData, error, retry } = usePlugins();
   const sources = plugins.flatMap((plugin) =>
     plugin.sources.map((source) => ({ pluginId: plugin.id, source }))
   );
@@ -63,6 +63,8 @@ export default function PageSources(): ReactElement {
       <PageSection title="Disponibles">
         <RequestState
           loading={loading}
+          fetching={fetching}
+          hasData={hasData}
           error={error}
           onRetry={retry}
           loadingLabel="Chargement des sources..."

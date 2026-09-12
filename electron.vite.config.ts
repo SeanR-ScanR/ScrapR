@@ -2,6 +2,7 @@ import { resolve } from 'path';
 import { defineConfig } from 'electron-vite';
 import react from '@vitejs/plugin-react';
 import { tanstackRouter } from '@tanstack/router-plugin/vite';
+import { devtools } from '@tanstack/devtools-vite';
 import routerConfig from './tsr.config.json';
 
 export default defineConfig({
@@ -38,6 +39,7 @@ export default defineConfig({
       }
     },
     plugins: [
+      devtools(),
       tanstackRouter({
         ...routerConfig,
         target: 'react',

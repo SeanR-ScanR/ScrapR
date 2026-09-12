@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from '@tanstack/react-router';
-import { descriptorClient } from '@renderer/services/descriptorClient';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { descriptorQueries } from '@renderer/services/ipcQueries';
 import {
   cacheResourcePath,
   getResourcePath,
-  type ExploreSearch,
-  type ResourceFrame
+  type ExploreSearch
 } from '@renderer/services/exploreNavigation';
 import type { AnyEntity, AnyPreview, DescriptorMetadata } from '@shared/pluginTypes';
 
@@ -19,6 +19,8 @@ export function useDescriptorBrowser(
   query: string;
   entries: AnyPreview[];
   loading: boolean;
+  fetching: boolean;
+  hasData: boolean;
   error: string;
   path: AnyEntity[];
   current: AnyEntity | undefined;
@@ -31,6 +33,7 @@ export function useDescriptorBrowser(
   back: (depth: number) => void;
 } {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { kind } = descriptor;
   const query = routeSearch.query ?? '';
   const frames = routeSearch.resource
@@ -42,24 +45,30 @@ export function useDescriptorBrowser(
   const frame = expired ? undefined : frames?.at(-1);
   const canSearch = descriptor.operations.includes('search');
   const canSuggest = descriptor.operations.includes('suggestions');
-  const [entries, setEntries] = useState<AnyPreview[]>([]);
-  const [loading, setLoading] = useState(!routeSearch.resource && (query ? canSearch : canSuggest));
-  const [error, setError] = useState('');
-  const [retryKey, setRetryKey] = useState(0);
-  const [loadedChildren, setLoadedChildren] = useState<{
-    frame: ResourceFrame;
-    children: DescriptorMetadata[];
-  }>();
-  const children =
-    frame && loadedChildren?.frame === frame ? loadedChildren.children : (frame?.children ?? []);
-  const [opening, setOpening] = useState(!!frame && !frame.children);
+  const searchQuery = useQuery({
+    ...descriptorQueries.search(pluginId, sourceId, [], kind, query),
+    enabled: !routeSearch.resource && !!query && canSearch
+  });
+  const suggestionsQuery = useQuery({
+    ...descriptorQueries.suggestions(pluginId, sourceId, kind),
+    enabled: !routeSearch.resource && !query && canSuggest
+  });
+  const entriesQuery = query ? searchQuery : suggestionsQuery;
+  const childrenQuery = useQuery({
+    ...descriptorQueries.list(
+      pluginId,
+      sourceId,
+      path.map((entity) => entity.kind)
+    ),
+    enabled: !!frame,
+    placeholderData: frame?.children
+  });
+  const [opening, setOpening] = useState(false);
   const [detailError, setDetailError] = useState('');
-  const entryRequest = useRef(0);
   const detailRequest = useRef(0);
 
   useEffect(() => {
     const invalidate = (): void => {
-      entryRequest.current += 1;
       detailRequest.current += 1;
     };
     const unsubscribe = router.subscribe('onBeforeNavigate', invalidate);
@@ -69,59 +78,9 @@ export function useDescriptorBrowser(
     };
   }, [router]);
 
-  useEffect(() => {
-    const id = ++entryRequest.current;
-    if (routeSearch.resource || !(query ? canSearch : canSuggest)) return;
-    const pending = query
-      ? descriptorClient.search(pluginId, sourceId, [], kind, query)
-      : descriptorClient.suggestions(pluginId, sourceId, kind);
-    void pending
-      .then((items) => {
-        if (id === entryRequest.current) setEntries(items);
-      })
-      .catch((error: unknown) => {
-        if (id === entryRequest.current)
-          setError(error instanceof Error ? error.message : String(error));
-      })
-      .finally(() => {
-        if (id === entryRequest.current) setLoading(false);
-      });
-    return () => {
-      entryRequest.current += 1;
-    };
-  }, [pluginId, sourceId, kind, canSearch, canSuggest, query, routeSearch.resource, retryKey]);
-
-  useEffect(() => {
-    if (!frame || frame.children) return;
-    const id = ++detailRequest.current;
-    void descriptorClient
-      .list(
-        pluginId,
-        sourceId,
-        (frames ?? []).map(({ entity }) => entity.kind)
-      )
-      .then((items) => {
-        if (id !== detailRequest.current) return;
-        frame.children = items;
-        setLoadedChildren({ frame, children: items });
-      })
-      .catch((error: unknown) => {
-        if (id === detailRequest.current)
-          setDetailError(error instanceof Error ? error.message : String(error));
-      })
-      .finally(() => {
-        if (id === detailRequest.current) setOpening(false);
-      });
-    return () => {
-      detailRequest.current += 1;
-    };
-  }, [pluginId, sourceId, frame, frames]);
-
   function search(nextQuery: string): void {
     if (!routeSearch.resource && nextQuery === query) {
-      setLoading(query ? canSearch : canSuggest);
-      setError('');
-      setRetryKey((key) => key + 1);
+      if (query ? canSearch : canSuggest) void entriesQuery.refetch();
     } else {
       navigate({ kind, query: nextQuery || undefined });
     }
@@ -132,12 +91,16 @@ export function useDescriptorBrowser(
     setOpening(true);
     setDetailError('');
     try {
-      const entity = await descriptorClient.get(pluginId, sourceId, path, entry.kind, entry.id);
+      const entity = await queryClient.query(
+        descriptorQueries.get(pluginId, sourceId, path, entry.kind, entry.id)
+      );
       if (id !== detailRequest.current) return;
-      const nextChildren = await descriptorClient.list(
-        pluginId,
-        sourceId,
-        [...path, entity].map((parent) => parent.kind)
+      const nextChildren = await queryClient.query(
+        descriptorQueries.list(
+          pluginId,
+          sourceId,
+          [...path, entity].map((parent) => parent.kind)
+        )
       );
       if (id !== detailRequest.current) return;
       const resource = cacheResourcePath(pluginId, sourceId, [
@@ -164,14 +127,18 @@ export function useDescriptorBrowser(
 
   return {
     query,
-    entries,
-    loading,
-    error,
+    entries: entriesQuery.data ?? [],
+    loading: entriesQuery.isLoading,
+    fetching: entriesQuery.isFetching,
+    hasData: entriesQuery.data !== undefined,
+    error: entriesQuery.isLoading ? '' : (entriesQuery.error?.message ?? ''),
     path,
     current,
-    children,
-    opening,
-    detailError,
+    children: frame ? (childrenQuery.data ?? frame.children ?? []) : [],
+    opening: opening || (!!frame && childrenQuery.isLoading),
+    detailError:
+      detailError ||
+      (frame && !childrenQuery.isLoading ? (childrenQuery.error?.message ?? '') : ''),
     expired,
     search,
     open,

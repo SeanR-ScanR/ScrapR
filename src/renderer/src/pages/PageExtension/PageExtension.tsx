@@ -10,7 +10,7 @@ import * as SourceList from '@renderer/components/SourceList/SourceList';
 import { usePlugins } from '@renderer/hooks/useRepository';
 
 export default function PageExtension(): ReactElement {
-  const { items: plugins, loading, error, retry } = usePlugins();
+  const { items: plugins, loading, fetching, hasData, error, retry } = usePlugins();
   const [query, setQuery] = useState('');
   const search = query.trim().toLocaleLowerCase();
   const filtered = plugins.filter((plugin) =>
@@ -43,6 +43,8 @@ export default function PageExtension(): ReactElement {
       <PageSection title="Extensions intégrées">
         <RequestState
           loading={loading}
+          fetching={fetching}
+          hasData={hasData}
           error={error}
           onRetry={retry}
           loadingLabel="Chargement des extensions..."
