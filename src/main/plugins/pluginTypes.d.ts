@@ -92,7 +92,7 @@ type ChildKinds<This extends Kind, Path extends readonly Kind[] = []> = Exclude<
 
 type HasChildren<This extends Kind, Path extends readonly Kind[] = []> =
   ChildKinds<This, Path> extends never
-    ? {}
+    ? any
     : {
         has?: Partial<{
           [K in ChildKinds<This, Path>]: PreviewMap[K][];
@@ -100,7 +100,7 @@ type HasChildren<This extends Kind, Path extends readonly Kind[] = []> =
       };
 
 type EntityOf<This extends Kind, Path extends readonly Kind[] = []> = EntityBaseMap[This] &
-  (This extends typeof Descriptors.PAGE ? {} : HasChildren<This, Path>);
+  (This extends typeof Descriptors.PAGE ? any : HasChildren<This, Path>);
 
 type PathEntities<Path extends readonly Kind[]> = {
   [I in keyof Path]: Path[I] extends Kind ? EntityOf<Path[I]> : never;
@@ -137,7 +137,7 @@ type DescriptorOf<This extends Kind, Path extends readonly Kind[] = []> = Descri
   This,
   Path
 > &
-  (This extends typeof Descriptors.PAGE ? {} : DescriptorChildren<This, Path>);
+  (This extends typeof Descriptors.PAGE ? any : DescriptorChildren<This, Path>);
 
 /* =========================================================
  * Public entity types
