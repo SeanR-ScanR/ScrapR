@@ -1,10 +1,12 @@
 import { app, shell, BrowserWindow, ipcMain } from 'electron';
 import { join } from 'path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
-import icon from '../../resources/icon.png?asset';
+import icon from '@shared/assets/icon.png?asset';
 import ynjnPlugin from './plugins/ynjnPlugin';
 import { getContextPath, getDescriptor } from './utils/ContextUtils';
-import { Kind } from './plugins/pluginTypes';
+import { Kind, PluginMetadata } from '@shared/pluginTypes';
+import internalSourceRepository from './plugins/internalSourceRepository';
+import { extractSourceMetadata } from './utils/sourceUtils';
 
 function createWindow(): void {
   // Create the browser window.
@@ -50,6 +52,10 @@ app.whenReady().then(() => {
   // see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window);
+  });
+
+  ipcMain.handle('sources:get', (): PluginMetadata[] => {
+    return internalSourceRepository.map(extractSourceMetadata);
   });
 
   ipcMain.handle('rootNodeKeys:get', () => {

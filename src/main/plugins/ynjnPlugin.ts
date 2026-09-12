@@ -5,9 +5,9 @@ import type {
   MagazinePreview,
   PagePreview,
   Plugin
-} from './pluginTypes.d.ts';
+} from '@shared/pluginTypes.d.ts';
 import axios from 'axios';
-import { Descriptors } from './pluginGlobals';
+import { Descriptors } from '@shared/pluginGlobals';
 
 const aFetch = axios.create();
 
@@ -15,6 +15,7 @@ const chapterPagesCache = new Map<ChapterPreview['id'], any[]>();
 
 const ynjnPlugin: Plugin = {
   name: 'ynjn',
+  language: 'ja',
   descriptors: {
     magazine: {
       _do: {

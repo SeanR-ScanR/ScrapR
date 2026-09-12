@@ -3,8 +3,8 @@ import { Box, Tabs } from '@radix-ui/themes';
 import MagazineNode from '@renderer/poc/components/MagazineNode';
 import ChapterNode from '@renderer/poc/components/ChapterNode';
 import PageNode from '@renderer/poc/components/PageNode';
-import { ContextOf, Kind } from '../../../../main/plugins/pluginTypes';
-import { Descriptors } from '../../../../main/plugins/pluginGlobals';
+import { ContextOf, Kind } from '@shared/pluginTypes';
+import { Descriptors } from '@shared/pluginGlobals';
 
 function DataTreeNode({
   context,

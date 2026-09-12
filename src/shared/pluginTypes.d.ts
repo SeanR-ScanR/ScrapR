@@ -1,4 +1,5 @@
 import { Descriptors } from './pluginGlobals';
+import type { LanguageCode } from 'iso-639-1';
 
 export type Kind = (typeof Descriptors)[keyof typeof Descriptors];
 
@@ -176,8 +177,12 @@ export type Suggestions = Partial<{
  * Plugin
  * =======================================================*/
 
-export type Plugin = {
+export type PluginMetadata = {
   name: string;
+  language: LanguageCode;
+};
+
+export type Plugin = PluginMetadata & {
   descriptors: Partial<{
     [K in Kind]: DescriptorOf<K>;
   }>;

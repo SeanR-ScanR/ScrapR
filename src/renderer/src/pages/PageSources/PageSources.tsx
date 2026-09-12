@@ -1,22 +1,17 @@
 import { Box, Flex, Grid, IconButton, Select, TextField } from '@radix-ui/themes';
 import { SearchIcon, SettingsIcon, TrashIcon } from 'lucide-react';
-import type { ReactElement } from 'react';
+import { ReactElement, useEffect, useState } from 'react';
 import { PageSection } from '@renderer/components/PageSection/PageSection';
 import * as SourceList from '@renderer/components/SourceList/SourceList';
-
-// Placeholder records until the source catalogue is connected.
-const sources = Array.from({ length: 5 }, (_, index) => ({
-  id: `comic-days-${index + 1}`,
-  title: 'Comic Days',
-  language: 'Japonais'
-}));
-
-const groups = [
-  { title: 'Plus récente', sources: sources.slice(0, 2) },
-  { title: 'Tous', sources }
-];
+import { PluginMetadata } from '@shared/pluginTypes';
 
 export default function PageSources(): ReactElement {
+  const [sources, setSources] = useState<PluginMetadata[]>([]);
+
+  useEffect(() => {
+    window.electron.ipcRenderer.invoke('sources:get').then(setSources);
+  }, []);
+
   return (
     <Flex direction="column" gap="6">
       <PageSection title="Sources">
@@ -54,36 +49,34 @@ export default function PageSources(): ReactElement {
           </Grid>
         </Flex>
       </PageSection>
-      {groups.map((group) => (
-        <PageSection key={group.title} title={group.title}>
-          <SourceList.Root aria-label={group.title}>
-            {group.sources.map((source) => (
-              <SourceList.Item key={source.id} title={source.title} language={source.language}>
-                <SourceList.Actions aria-label={`Actions pour ${source.title}`}>
-                  <IconButton
-                    size="2"
-                    variant="ghost"
-                    color="gray"
-                    disabled
-                    aria-label={`Supprimer ${source.title}`}
-                  >
-                    <TrashIcon size={18} aria-hidden="true" />
-                  </IconButton>
-                  <IconButton
-                    size="2"
-                    variant="ghost"
-                    color="gray"
-                    disabled
-                    aria-label={`Paramètres de ${source.title}`}
-                  >
-                    <SettingsIcon size={18} aria-hidden="true" />
-                  </IconButton>
-                </SourceList.Actions>
-              </SourceList.Item>
-            ))}
-          </SourceList.Root>
-        </PageSection>
-      ))}
+      <PageSection title={'Installées'}>
+        <SourceList.Root>
+          {sources.map((source) => (
+            <SourceList.Item key={source.name} title={source.name} language={source.language}>
+              <SourceList.Actions aria-label={`Actions pour ${source.name}`}>
+                <IconButton
+                  size="2"
+                  variant="ghost"
+                  color="gray"
+                  disabled
+                  aria-label={`Supprimer ${source.name}`}
+                >
+                  <TrashIcon size={18} aria-hidden="true" />
+                </IconButton>
+                <IconButton
+                  size="2"
+                  variant="ghost"
+                  color="gray"
+                  disabled
+                  aria-label={`Paramètres de ${source.name}`}
+                >
+                  <SettingsIcon size={18} aria-hidden="true" />
+                </IconButton>
+              </SourceList.Actions>
+            </SourceList.Item>
+          ))}
+        </SourceList.Root>
+      </PageSection>
     </Flex>
   );
 }

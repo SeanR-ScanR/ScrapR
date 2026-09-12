@@ -1,4 +1,4 @@
-import { ContextOf, EntityOf, Kind, Plugin } from '../pluginTypes';
+import { ContextOf, EntityOf, Kind, Plugin } from '@shared/pluginTypes';
 
 export function getContextPath<Path extends readonly Kind[]>(context: ContextOf<Path>): Kind[] {
   if (!context?._parents) {
