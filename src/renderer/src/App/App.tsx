@@ -1,16 +1,11 @@
-import { useState, type ReactElement } from 'react';
+import type { ReactElement } from 'react';
+import { Outlet, useLocation } from '@tanstack/react-router';
 import * as AppShell from '@renderer/components/AppShell/AppShell';
-import {
-  SidebarNavigation,
-  type PageId
-} from '@renderer/components/SidebarNavigation/SidebarNavigation';
+import { SidebarNavigation } from '@renderer/components/SidebarNavigation/SidebarNavigation';
 import TopBar from '@renderer/components/TopBar/TopBar';
-import PageAccueil from '@renderer/pages/PageAccueil/PageAccueil';
-import PageSources from '@renderer/pages/PageSources/PageSources';
-import PocApp from '@renderer/poc/PocApp';
 
 export default function App(): ReactElement {
-  const [activePage, setActivePage] = useState<PageId>('accueil');
+  const pathname = useLocation({ select: (location) => location.pathname });
 
   return (
     <AppShell.Root>
@@ -19,16 +14,11 @@ export default function App(): ReactElement {
       </AppShell.Header>
       <AppShell.Body>
         <AppShell.Sidebar>
-          <SidebarNavigation value={activePage} onValueChange={setActivePage} />
+          <SidebarNavigation />
         </AppShell.Sidebar>
-        {activePage === 'poc' ? (
-          <PocApp />
-        ) : (
-          <AppShell.Content key={activePage}>
-            {activePage === 'accueil' && <PageAccueil />}
-            {activePage === 'sources' && <PageSources />}
-          </AppShell.Content>
-        )}
+        <AppShell.Content key={pathname}>
+          <Outlet />
+        </AppShell.Content>
       </AppShell.Body>
     </AppShell.Root>
   );

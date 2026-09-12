@@ -1,12 +1,13 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain, shell } from 'electron';
 import { join } from 'path';
-import { electronApp, optimizer, is } from '@electron-toolkit/utils';
+import { electronApp, is, optimizer } from '@electron-toolkit/utils';
 import icon from '@shared/assets/icon.png?asset';
 import ynjnPlugin from './plugins/ynjnPlugin';
 import { getContextPath, getDescriptor } from './utils/ContextUtils';
-import { Kind, PluginMetadata } from '@shared/pluginTypes';
+import { Kind, KindSchema, PluginMetadata } from '@shared/pluginTypes';
 import internalSourceRepository from './plugins/internalSourceRepository';
 import { extractSourceMetadata } from './utils/sourceUtils';
+import { z } from 'zod';
 
 function createWindow(): void {
   // Create the browser window.
@@ -40,24 +41,7 @@ function createWindow(): void {
   }
 }
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
-app.whenReady().then(() => {
-  // Set app user model id for windows
-  electronApp.setAppUserModelId('com.electron');
-
-  // Default open or close DevTools by F12 in development
-  // and ignore CommandOrControl + R in production.
-  // see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils
-  app.on('browser-window-created', (_, window) => {
-    optimizer.watchWindowShortcuts(window);
-  });
-
-  ipcMain.handle('sources:get', (): PluginMetadata[] => {
-    return internalSourceRepository.map(extractSourceMetadata);
-  });
-
+function poc() {
   ipcMain.handle('rootNodeKeys:get', () => {
     return Object.keys(ynjnPlugin.descriptors).filter((d) => !d.startsWith('_'));
   });
@@ -75,6 +59,39 @@ app.whenReady().then(() => {
     // @ts-ignore
     return descriptor?._do[action](ctx, ...args);
   });
+}
+
+// This method will be called when Electron has finished
+// initialization and is ready to create browser windows.
+// Some APIs can only be used after this event occurs.
+app.whenReady().then(() => {
+  // Set app user model id for windows
+  electronApp.setAppUserModelId('com.electron');
+
+  // Default open or close DevTools by F12 in development
+  // and ignore CommandOrControl + R in production.
+  // see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils
+  app.on('browser-window-created', (_, window) => {
+    optimizer.watchWindowShortcuts(window);
+  });
+
+  ipcMain.handle('source.list:get', (): PluginMetadata[] => {
+    return internalSourceRepository.map(extractSourceMetadata);
+  });
+
+  ipcMain.handle(
+    'source.descriptor.root.list:get',
+    (_event, sourceId: PluginMetadata['name']): Kind[] => {
+      const source = internalSourceRepository.find((source) => source.name === sourceId);
+      if (!source) {
+        throw new Error('source not found');
+      }
+      return z.array(KindSchema).parse(Object.keys(source.descriptors));
+    }
+  );
+
+  // ===== poc =====
+  poc();
 
   createWindow();
 

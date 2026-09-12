@@ -1,6 +1,8 @@
 import { resolve } from 'path';
 import { defineConfig } from 'electron-vite';
 import react from '@vitejs/plugin-react';
+import { tanstackRouter } from '@tanstack/router-plugin/vite';
+import routerConfig from './tsr.config.json';
 
 export default defineConfig({
   main: {
@@ -32,9 +34,17 @@ export default defineConfig({
     resolve: {
       alias: {
         '@shared': resolve('src/shared'),
-        '@renderer': resolve('src/renderer/src'),
+        '@renderer': resolve('src/renderer/src')
       }
     },
-    plugins: [react()]
+    plugins: [
+      tanstackRouter({
+        ...routerConfig,
+        target: 'react',
+        routesDirectory: resolve(routerConfig.routesDirectory),
+        generatedRouteTree: resolve(routerConfig.generatedRouteTree)
+      }),
+      react()
+    ]
   }
 });
