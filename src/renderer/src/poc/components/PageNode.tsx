@@ -12,7 +12,7 @@ import {
   Text
 } from '@radix-ui/themes';
 import { ContextOf, Kind, Page, PagePreview } from '@shared/pluginTypes';
-import { Descriptors } from '@shared/pluginGlobals';
+import { Descriptors } from '@shared/pluginTypes';
 
 export default function PageNode({
   context,

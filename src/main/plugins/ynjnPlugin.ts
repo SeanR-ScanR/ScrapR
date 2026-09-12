@@ -5,13 +5,55 @@ import type {
   MagazinePreview,
   PagePreview,
   Plugin
-} from '@shared/pluginTypes.d.ts';
+} from '@shared/pluginTypes';
 import axios from 'axios';
-import { Descriptors } from '@shared/pluginGlobals';
+import { z } from 'zod';
+import { Descriptors } from '@shared/pluginTypes';
 
 const aFetch = axios.create();
 
-const chapterPagesCache = new Map<ChapterPreview['id'], any[]>();
+const idSchema = z.union([z.string(), z.number()]).transform(String);
+const titleSchema = z.object({ id: idSchema, name: z.string() });
+const titlesResponseSchema = z.object({
+  data: z.object({ titles: z.array(titleSchema) })
+});
+const mangaPageSchema = z.object({
+  page_id: idSchema,
+  page_image_url: z.url({ protocol: /^https?$/ })
+});
+
+const chapterPagesCache = new Map<ChapterPreview['id'], z.infer<typeof mangaPageSchema>[]>();
+
+async function fetchChapter(
+  magazineId: MagazinePreview['id'],
+  chapterId: ChapterPreview['id']
+): Promise<{
+  navigation: z.infer<typeof titleSchema> & { share_text: string };
+  pages: z.infer<typeof mangaPageSchema>[];
+}> {
+  const res = z
+    .object({
+      data: z.object({
+        viewer_navigation: titleSchema.extend({ share_text: z.string() }),
+        pages: z.array(z.object({ manga_page: mangaPageSchema.nullish() }))
+      })
+    })
+    .parse(
+      (
+        await aFetch.get<unknown>('https://webapi.ynjn.jp/viewer', {
+          params: {
+            titleId: magazineId,
+            episodeId: chapterId,
+            viewerOnly: 0
+          }
+        })
+      ).data
+    ).data;
+  const pages = res.pages.flatMap((p) => (p.manga_page ? [p.manga_page] : []));
+  chapterPagesCache.set(chapterId, pages);
+  chapterPagesCache.set(res.viewer_navigation.id, pages);
+  return { navigation: res.viewer_navigation, pages };
+}
 
 const ynjnPlugin: Plugin = {
   name: 'ynjn',
@@ -20,7 +62,7 @@ const ynjnPlugin: Plugin = {
     magazine: {
       _do: {
         search: async (_, query): Promise<MagazinePreview[]> => {
-          const apiRes = await aFetch.get('https://webapi.ynjn.jp/title/category/TEXT', {
+          const apiRes = await aFetch.get<unknown>('https://webapi.ynjn.jp/title/category/TEXT', {
             params: {
               category: 'TEXT',
               page: 1,
@@ -28,21 +70,35 @@ const ynjnPlugin: Plugin = {
               text: query
             }
           });
-          const res = apiRes.data.data.titles.map((t): MagazinePreview => ({
-            kind: Descriptors.MAGAZINE,
-            id: t.id,
-            title: t.name
-          }));
+          const res = titlesResponseSchema
+            .parse(apiRes.data)
+            .data.titles.map((t): MagazinePreview => ({
+              kind: Descriptors.MAGAZINE,
+              id: t.id,
+              title: t.name
+            }));
           console.log(res);
           return res;
         },
         get: async (_, id) => {
-          const globalRes = (await aFetch.get('https://webapi.ynjn.jp/book/' + id)).data.data.book;
-          const chaptersRes = (
-            await aFetch.get('https://webapi.ynjn.jp/title/' + id + '/episode', {
-              params: { isGetAll: true }
+          const globalRes = z
+            .object({
+              data: z.object({
+                book: z.object({ title_id: idSchema, name: z.string(), summary: z.string() })
+              })
             })
-          ).data.data.episodes;
+            .parse((await aFetch.get<unknown>('https://webapi.ynjn.jp/book/' + id)).data).data.book;
+          const chaptersRes = z
+            .object({
+              data: z.object({ episodes: z.array(titleSchema) })
+            })
+            .parse(
+              (
+                await aFetch.get<unknown>('https://webapi.ynjn.jp/title/' + id + '/episode', {
+                  params: { isGetAll: true }
+                })
+              ).data
+            ).data.episodes;
           const res: Magazine = {
             kind: Descriptors.MAGAZINE,
             id: globalRes.title_id,
@@ -60,17 +116,19 @@ const ynjnPlugin: Plugin = {
           return res;
         },
         suggestions: async () => {
-          const apiRes = await aFetch.get('https://webapi.ynjn.jp/title/feature', {
+          const apiRes = await aFetch.get<unknown>('https://webapi.ynjn.jp/title/feature', {
             params: {
               displayLocation: 'TOP_PAGE_5',
               page: 1
             }
           });
-          const res = apiRes.data.data.titles.map((t): MagazinePreview => ({
-            kind: Descriptors.MAGAZINE,
-            id: t.id,
-            title: t.name
-          }));
+          const res = titlesResponseSchema
+            .parse(apiRes.data)
+            .data.titles.map((t): MagazinePreview => ({
+              kind: Descriptors.MAGAZINE,
+              id: t.id,
+              title: t.name
+            }));
           console.log(res);
           return res;
         }
@@ -78,25 +136,14 @@ const ynjnPlugin: Plugin = {
       chapter: {
         _do: {
           get: async (context, id): Promise<Chapter> => {
-            const res = (
-              await aFetch.get('https://webapi.ynjn.jp/viewer', {
-                params: {
-                  titleId: context.magazine.id,
-                  episodeId: id,
-                  viewerOnly: 0
-                }
-              })
-            ).data.data;
-            chapterPagesCache[res.viewer_navigation.id] = res.pages
-              .filter((p) => p.manga_page)
-              .map((p) => p.manga_page);
+            const { navigation, pages } = await fetchChapter(context.magazine.id, id);
             return {
               kind: Descriptors.CHAPTER,
-              id: res.viewer_navigation.id,
-              title: res.viewer_navigation.name,
-              description: res.viewer_navigation.share_text,
+              id: navigation.id,
+              title: navigation.name,
+              description: navigation.share_text,
               has: {
-                page: chapterPagesCache[res.viewer_navigation.id].map((p): PagePreview => ({
+                page: pages.map((p): PagePreview => ({
                   kind: Descriptors.PAGE,
                   id: p.page_id
                 }))
@@ -107,16 +154,28 @@ const ynjnPlugin: Plugin = {
         page: {
           _do: {
             get: async (context, id) => {
-              console.log(context, context.chapter.id, chapterPagesCache[context.chapter.id]);
-              const rawPageData = chapterPagesCache[context.chapter.id].find(
-                (p) => p.page_id === id
-              );
+              const pages =
+                chapterPagesCache.get(context.chapter.id) ??
+                (await fetchChapter(context.magazine.id, context.chapter.id)).pages;
+              const rawPageData = pages.find((p) => p.page_id === id);
+              if (!rawPageData) {
+                throw new Error(`Page ${id} was not found in chapter ${context.chapter.id}`);
+              }
               console.log(rawPageData);
-              const res = await aFetch.get(rawPageData.page_image_url, {
-                responseType: 'arraybuffer'
-              });
+              const res = z
+                .object({
+                  data: z.instanceof(Buffer),
+                  headers: z.object({
+                    'content-type': z.string().optional()
+                  })
+                })
+                .parse(
+                  await aFetch.get<unknown>(rawPageData.page_image_url, {
+                    responseType: 'arraybuffer'
+                  })
+                );
               const contentType = res.headers['content-type'];
-              const base64 = Buffer.from(res.data, 'binary').toString('base64');
+              const base64 = res.data.toString('base64');
 
               return {
                 kind: Descriptors.PAGE,

@@ -12,7 +12,7 @@ import {
   Text
 } from '@radix-ui/themes';
 import { Chapter, ChapterPreview, ContextOf, Kind } from '@shared/pluginTypes';
-import { Descriptors } from '@shared/pluginGlobals';
+import { Descriptors } from '@shared/pluginTypes';
 import DataTreeNode from '@renderer/poc/components/DataTreeNode';
 import { withParent } from '@renderer/poc/utils/ContextUtils';
 

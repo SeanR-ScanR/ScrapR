@@ -14,7 +14,7 @@ import {
 import { ContextOf, Kind, Magazine, MagazinePreview } from '@shared/pluginTypes';
 import DataTreeNode from '@renderer/poc/components/DataTreeNode';
 import { withParent } from '@renderer/poc/utils/ContextUtils';
-import { Descriptors } from '@shared/pluginGlobals';
+import { Descriptors } from '@shared/pluginTypes';
 
 function MagazineNode({
   context,

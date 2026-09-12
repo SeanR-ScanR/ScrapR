@@ -1,5 +1,5 @@
-import { Plugin, PluginMetadata } from '@shared/pluginTypes';
+import { PluginMetadataSchema, type PluginMetadata } from '@shared/pluginTypes';
 
-export function extractSourceMetadata(source: Plugin): PluginMetadata {
- return {name: source.name, language: source.language};
+export function extractSourceMetadata(source: unknown): PluginMetadata {
+  return PluginMetadataSchema.parse(source);
 }

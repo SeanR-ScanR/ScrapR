@@ -4,7 +4,7 @@ import MagazineNode from '@renderer/poc/components/MagazineNode';
 import ChapterNode from '@renderer/poc/components/ChapterNode';
 import PageNode from '@renderer/poc/components/PageNode';
 import { ContextOf, Kind } from '@shared/pluginTypes';
-import { Descriptors } from '@shared/pluginGlobals';
+import { Descriptors } from '@shared/pluginTypes';
 
 function DataTreeNode({
   context,
