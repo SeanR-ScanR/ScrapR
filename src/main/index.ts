@@ -63,10 +63,6 @@ app.whenReady().then(() => {
     return Object.keys(descriptor?._do);
   });
 
-  ipcMain.handle('suggestions:get', async () => {
-    return ynjnPlugin.suggestions?.() ?? {};
-  });
-
   ipcMain.handle('action:do', async (_, ctx: any, nodeKey: Kind, action: string, ...args) => {
     const descriptor = getDescriptor(ynjnPlugin.descriptors, [...getContextPath(ctx), nodeKey]);
     console.log(ctx, descriptor);
