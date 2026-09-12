@@ -11,8 +11,8 @@ import {
   Separator,
   Text
 } from '@radix-ui/themes';
-import { Chapter, ChapterPreview, ContextOf, Kind } from '../../../../main/pluginTypes';
-import { Descriptors } from '../../../../main/pluginGlobals';
+import { Chapter, ChapterPreview, ContextOf, Kind } from '../../../../main/plugins/pluginTypes';
+import { Descriptors } from '../../../../main/plugins/pluginGlobals';
 import DataTreeNode from '@renderer/poc/components/DataTreeNode';
 import { withParent } from '@renderer/poc/utils/ContextUtils';
 

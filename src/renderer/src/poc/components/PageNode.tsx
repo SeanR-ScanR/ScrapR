@@ -11,8 +11,8 @@ import {
   Separator,
   Text
 } from '@radix-ui/themes';
-import { ContextOf, Kind, Page, PagePreview } from '../../../../main/pluginTypes';
-import { Descriptors } from '../../../../main/pluginGlobals';
+import { ContextOf, Kind, Page, PagePreview } from '../../../../main/plugins/pluginTypes';
+import { Descriptors } from '../../../../main/plugins/pluginGlobals';
 
 export default function PageNode({
   context,

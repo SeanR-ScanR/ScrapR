@@ -1,4 +1,4 @@
-import { ContextOf, EntityOf, Kind } from '../../../../main/pluginTypes';
+import { ContextOf, EntityOf, Kind } from '../../../../main/plugins/pluginTypes';
 
 export function createContext() {
   return {
