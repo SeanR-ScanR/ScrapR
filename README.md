@@ -2,65 +2,6 @@
 
 An Electron application with React and TypeScript
 
-## UI Architecture
-
-The main renderer uses Radix Themes (dark, slate, violet). Use its component variants,
-responsive layout props, and design tokens instead of overriding component internals.
-Application-only geometry belongs in colocated CSS modules.
-
-Each component and page has its own `ComponentName/` folder containing its named `.tsx`
-implementation and any component-specific styles, assets, helpers, or tests. Compound component
-parts stay together in their family's folder. Import the implementation directly; shared document
-styles remain in `assets/main.css`. This convention excludes `poc` and TanStack route files.
-
-- `AppShell` is a compound layout: `Root`, `Header`, `Body`, `Sidebar`, and `Content`.
-- `SourceList` composes `Root`, `Item`, and optional `Actions`. Pages own actions; rows do not
-  assume deletion or settings behavior.
-- `PageSection` provides an accessible heading/section relationship. `FavoriteCard` represents
-  a domain item, not a replacement for the Radix `Card` primitive.
-- Component props live alongside their implementation. Navigation uses typed TanStack Router links,
-  and page-local input state resets when changing pages.
-- Theme boundaries belong to the shell. All pages, including POC, use the shared content theme,
-  spacing, and scrolling container.
-
-### Routing
-
-TanStack Router uses file-based routing in `src/renderer/src/routes/`:
-
-- `__root.tsx` selects the persistent `App` shell and not-found page.
-- `index.tsx` maps to `/`.
-- `sources/route.tsx`, `extension/route.tsx`, and `settings/route.tsx` define their respective routes.
-- `poc/route.tsx` defines `/poc`, which uses the same layout as every other page.
-
-Route files are thin definitions that import page/layout components. The Vite router plugin runs
-before React and automatically code-splits route components. `tsr.config.json` is shared by the
-Electron renderer build, browser test server, and CLI generator.
-
-`routeTree.gen.ts` is generated and should be committed, never edited manually. It is excluded from
-linting and formatting. Development and builds regenerate it through the Vite plugin;
-`npm run routes:generate` generates it independently, and `typecheck:web` runs generation first
-so a missing or stale tree cannot block typechecking before Vite starts.
-
-`router.ts` configures the router from the generated tree and registers its types. `main.tsx`
-mounts the provider. `App` is the single shared layout: header, sidebar, and a content area with
-an outlet, not page components. It resets the content subtree and scroll position when the pathname
-changes. There is no pathless intermediate layout because all pages share the same presentation.
-Extension and Settings currently display explicit unavailable-feature placeholders.
-
-Hash history keeps navigation and reloads compatible with Electron's packaged `file://` entry.
-Add destinations as route files using `createFileRoute` and use typed `Link` components rather
-than local navigation state. Keep page implementations in their own folders, outside the shell.
-
-### UI Checks
-
-```bash
-npm run build
-```
-
-The build regenerates the route tree and checks TypeScript before bundling. The current checkout
-does not contain the browser test suite. Verify navigation, reloads, page-local input resets,
-and the shared POC layout in Electron when testing manually.
-
 ## Recommended IDE Setup
 
 - [VSCode](https://code.visualstudio.com/) + [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) + [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
@@ -91,3 +32,34 @@ $ npm run build:mac
 # For Linux
 $ npm run build:linux
 ```
+
+## System API
+
+The API separates plugin definitions, domain operations, and Electron transport:
+
+- `src/shared/pluginTypes.ts` defines descriptor schemas, inferred plugin types, and descriptor metadata. Operation names are derived from the operation schema; supported capabilities are fetched for the requested descriptor path.
+- `src/main/utils/descriptorUtils.ts` provides descriptor traversal, capability discovery, suggestions, search, resource retrieval, and URL parsing. These functions accept a `Source` and have no Electron or repository dependency.
+- `src/main/utils/sourceUtils.ts` provides source enumeration, metadata extraction, and plugin-qualified repository lookup. Source IDs must be unique within a plugin, not globally; ambiguous lookups fail rather than choosing a source silently.
+- `src/shared/ipcTypes.ts` is the IPC contract registry. Each channel defines argument schemas and selects its result schema from validated arguments. Transport types are inferred from the registry, without channel-specific conditional types.
+- `src/main/ipc/handle.ts` validates requests and results around typed handlers. IPC registrations only resolve dependencies and delegate to domain utilities.
+- `src/renderer/src/services/ipcClient.ts` provides the matching typed, validated `invoke` function. UI code uses `repositoryClient` and `descriptorClient` rather than raw Electron calls.
+
+Domain utilities retain kind-specific result inference:
+
+```ts
+const source = resolveSource(pluginId, sourceId, plugins);
+const kinds = listDescriptors(source);
+const operations = getDescriptorCapabilities(source, ['series', 'chapter']);
+const series = await getDescriptorResource(source, [], 'series', seriesId);
+const chapter = await getDescriptorResource(source, [series], 'chapter', chapterId);
+```
+
+Paths describe descriptor kinds; operation parents are full entities in ancestor order. A kind-only path cannot replace resource parents because plugins need their IDs and other context fields. Empty paths are valid for root discovery. Repeated kinds and paths continuing after a terminal descriptor are rejected. Domain operations and both IPC boundaries validate results against the selected kind and ancestor path.
+
+Resource client methods preserve literal kinds and parent tuples through generic overloads. Dynamic parent arrays have conservative inferred result types, while their actual paths are still enforced at runtime. Raw `invoke` exposes the broader schema-inferred transport type; it does not duplicate resource-specific type logic.
+
+`SourceMetadata.descriptors` contains root descriptor metadata (`kind` and supported `operations`), not just kind names. Plugin metadata includes this same source metadata. Root browsing reuses it directly; nested browsing calls `plugin.source.descriptor:list`, which returns the same descriptor metadata shape in a single request. `extractDescriptorMetadata` and `listDescriptorMetadata` provide the reusable domain implementation. Capabilities remain path-specific and can also be queried independently.
+
+Source endpoints use the `plugin.source` prefix and require a plugin ID. Endpoints targeting a particular source also require its source ID. Resource endpoints, including search and suggestions, use `plugin.source.descriptor.resource:<operation>`.
+
+To add an IPC endpoint, define its schemas in `IpcContracts`, register it with `handle`, and call it through `invoke`. Do not redeclare argument/result interfaces or bypass the validating wrappers.

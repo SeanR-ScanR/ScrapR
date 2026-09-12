@@ -1,21 +1,14 @@
 import { Box, Button, Flex, Heading, Separator } from '@radix-ui/themes';
 import type { ReactElement } from 'react';
 import { Link, useMatchRoute } from '@tanstack/react-router';
-import {
-  FlaskConicalIcon,
-  GalleryVerticalEndIcon,
-  HouseIcon,
-  SettingsIcon,
-  ToyBrickIcon
-} from 'lucide-react';
+import { GalleryVerticalEndIcon, HouseIcon, SettingsIcon, ToyBrickIcon } from 'lucide-react';
 import styles from './SidebarNavigation.module.css';
 
 const pages = [
   { to: '/', label: 'Accueil', icon: HouseIcon },
   { to: '/sources', label: 'Sources', icon: GalleryVerticalEndIcon },
-  { to: '/extension', label: 'Extension', icon: ToyBrickIcon },
-  { to: '/poc', label: 'POC', icon: FlaskConicalIcon },
-  { to: '/settings', label: 'Settings', icon: SettingsIcon }
+  { to: '/extension', label: 'Extensions', icon: ToyBrickIcon },
+  { to: '/settings', label: 'Paramètres', icon: SettingsIcon }
 ] as const;
 
 export function SidebarNavigation(): ReactElement {

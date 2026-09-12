@@ -9,8 +9,8 @@ const favorites = ['7 Princess', 'Sentai', 'Marchen', 'Aishiteru', 'Star Blossom
 export default function PageAccueil(): ReactElement {
   return (
     <Flex direction="column" gap="6">
-      <PageSection title="Rip par URL">
-        <TextField.Root size="3" type="url" aria-label="Rip par URL">
+      <PageSection title="Extraction par URL">
+        <TextField.Root size="3" type="url" aria-label="Extraction par URL">
           <TextField.Slot>
             <LinkIcon size={18} aria-hidden="true" />
           </TextField.Slot>

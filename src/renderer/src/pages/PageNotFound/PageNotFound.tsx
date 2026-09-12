@@ -7,7 +7,7 @@ export default function PageNotFound(): ReactElement {
     <>
       <Heading as="h2">Page introuvable</Heading>
       <Text>Cette page n&apos;existe pas.</Text>
-      <Link to="/">Retour a l&apos;accueil</Link>
+      <Link to="/">Retour à l&apos;accueil</Link>
     </>
   );
 }

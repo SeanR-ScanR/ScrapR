@@ -11,9 +11,9 @@
 import { Route as rootRouteImport } from './routes/__root';
 import { Route as IndexRouteImport } from './routes/index';
 import { Route as ExtensionRouteRouteImport } from './routes/extension/route';
-import { Route as PocRouteRouteImport } from './routes/poc/route';
 import { Route as SettingsRouteRouteImport } from './routes/settings/route';
 import { Route as SourcesRouteRouteImport } from './routes/sources/route';
+import { Route as ExplorePluginIdSourceIdRouteImport } from './routes/explore.$pluginId.$sourceId';
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -23,11 +23,6 @@ const IndexRoute = IndexRouteImport.update({
 const ExtensionRouteRoute = ExtensionRouteRouteImport.update({
   id: '/extension',
   path: '/extension',
-  getParentRoute: () => rootRouteImport,
-} as any);
-const PocRouteRoute = PocRouteRouteImport.update({
-  id: '/poc',
-  path: '/poc',
   getParentRoute: () => rootRouteImport,
 } as any);
 const SettingsRouteRoute = SettingsRouteRouteImport.update({
@@ -40,43 +35,64 @@ const SourcesRouteRoute = SourcesRouteRouteImport.update({
   path: '/sources',
   getParentRoute: () => rootRouteImport,
 } as any);
+const ExplorePluginIdSourceIdRoute = ExplorePluginIdSourceIdRouteImport.update({
+  id: '/explore/$pluginId/$sourceId',
+  path: '/explore/$pluginId/$sourceId',
+  getParentRoute: () => rootRouteImport,
+} as any);
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute;
   '/extension': typeof ExtensionRouteRoute;
-  '/poc': typeof PocRouteRoute;
   '/settings': typeof SettingsRouteRoute;
   '/sources': typeof SourcesRouteRoute;
+  '/explore/$pluginId/$sourceId': typeof ExplorePluginIdSourceIdRoute;
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute;
   '/extension': typeof ExtensionRouteRoute;
-  '/poc': typeof PocRouteRoute;
   '/settings': typeof SettingsRouteRoute;
   '/sources': typeof SourcesRouteRoute;
+  '/explore/$pluginId/$sourceId': typeof ExplorePluginIdSourceIdRoute;
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport;
   '/': typeof IndexRoute;
   '/extension': typeof ExtensionRouteRoute;
-  '/poc': typeof PocRouteRoute;
   '/settings': typeof SettingsRouteRoute;
   '/sources': typeof SourcesRouteRoute;
+  '/explore/$pluginId/$sourceId': typeof ExplorePluginIdSourceIdRoute;
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath;
-  fullPaths: '/' | '/extension' | '/poc' | '/settings' | '/sources';
+  fullPaths:
+    | '/'
+    | '/extension'
+    | '/settings'
+    | '/sources'
+    | '/explore/$pluginId/$sourceId';
   fileRoutesByTo: FileRoutesByTo;
-  to: '/' | '/extension' | '/poc' | '/settings' | '/sources';
-  id: '__root__' | '/' | '/extension' | '/poc' | '/settings' | '/sources';
+  to:
+    | '/'
+    | '/extension'
+    | '/settings'
+    | '/sources'
+    | '/explore/$pluginId/$sourceId';
+  id:
+    | '__root__'
+    | '/'
+    | '/extension'
+    | '/settings'
+    | '/sources'
+    | '/explore/$pluginId/$sourceId';
   fileRoutesById: FileRoutesById;
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute;
   ExtensionRouteRoute: typeof ExtensionRouteRoute;
-  PocRouteRoute: typeof PocRouteRoute;
   SettingsRouteRoute: typeof SettingsRouteRoute;
   SourcesRouteRoute: typeof SourcesRouteRoute;
+  ExplorePluginIdSourceIdRoute: typeof ExplorePluginIdSourceIdRoute;
 }
 
 declare module '@tanstack/react-router' {
@@ -95,13 +111,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ExtensionRouteRouteImport;
       parentRoute: typeof rootRouteImport;
     };
-    '/poc': {
-      id: '/poc';
-      path: '/poc';
-      fullPath: '/poc';
-      preLoaderRoute: typeof PocRouteRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
     '/settings': {
       id: '/settings';
       path: '/settings';
@@ -116,15 +125,22 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SourcesRouteRouteImport;
       parentRoute: typeof rootRouteImport;
     };
+    '/explore/$pluginId/$sourceId': {
+      id: '/explore/$pluginId/$sourceId';
+      path: '/explore/$pluginId/$sourceId';
+      fullPath: '/explore/$pluginId/$sourceId';
+      preLoaderRoute: typeof ExplorePluginIdSourceIdRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ExtensionRouteRoute: ExtensionRouteRoute,
-  PocRouteRoute: PocRouteRoute,
   SettingsRouteRoute: SettingsRouteRoute,
   SourcesRouteRoute: SourcesRouteRoute,
+  ExplorePluginIdSourceIdRoute: ExplorePluginIdSourceIdRoute,
 };
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

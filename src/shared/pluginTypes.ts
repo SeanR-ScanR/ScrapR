@@ -9,152 +9,239 @@ export const Descriptors = {
   PAGE: 'page'
 } as const;
 
-export const KindSchema = z.enum(Descriptors);
-export type Kind = z.infer<typeof KindSchema>;
+export const DescriptorKindSchema = z.enum(Descriptors);
+export type DescriptorKind = z.infer<typeof DescriptorKindSchema>;
 
-export const MagazinePreviewSchema = z.object({
-  kind: z.literal(Descriptors.MAGAZINE),
-  id: z.string(),
-  title: z.string()
-});
-export const ReleasePreviewSchema = MagazinePreviewSchema.extend({
-  kind: z.literal(Descriptors.RELEASE),
-  date: z.string()
-});
-export const SeriesPreviewSchema = MagazinePreviewSchema.extend({
-  kind: z.literal(Descriptors.SERIES)
-});
-export const ChapterPreviewSchema = MagazinePreviewSchema.extend({
-  kind: z.literal(Descriptors.CHAPTER)
-});
-export const PagePreviewSchema = z.object({
-  kind: z.literal(Descriptors.PAGE),
-  id: z.string()
-});
+const titledPreviewShape = { id: z.string(), title: z.string() };
+const descriptionShape = { description: z.string() };
+const descriptorDefinitions = {
+  [Descriptors.MAGAZINE]: {
+    preview: titledPreviewShape,
+    entity: descriptionShape,
+    terminal: false
+  },
+  [Descriptors.RELEASE]: {
+    preview: { ...titledPreviewShape, date: z.string() },
+    entity: descriptionShape,
+    terminal: false
+  },
+  [Descriptors.SERIES]: { preview: titledPreviewShape, entity: descriptionShape, terminal: false },
+  [Descriptors.CHAPTER]: { preview: titledPreviewShape, entity: descriptionShape, terminal: false },
+  [Descriptors.PAGE]: {
+    preview: { id: z.string() },
+    entity: { dataUri: z.string() },
+    terminal: true
+  }
+} as const satisfies Record<
+  DescriptorKind,
+  { preview: z.ZodRawShape; entity: z.ZodRawShape; terminal: boolean }
+>;
 
-export type MagazinePreview = z.infer<typeof MagazinePreviewSchema>;
-export type ReleasePreview = z.infer<typeof ReleasePreviewSchema>;
-export type SeriesPreview = z.infer<typeof SeriesPreviewSchema>;
-export type ChapterPreview = z.infer<typeof ChapterPreviewSchema>;
-export type PagePreview = z.infer<typeof PagePreviewSchema>;
+type DescriptorDefinitions = typeof descriptorDefinitions;
+type TerminalKind = {
+  [K in DescriptorKind]: DescriptorDefinitions[K]['terminal'] extends true ? K : never;
+}[DescriptorKind];
 
-const previewSchemas = {
-  magazine: MagazinePreviewSchema,
-  release: ReleasePreviewSchema,
-  series: SeriesPreviewSchema,
-  chapter: ChapterPreviewSchema,
-  page: PagePreviewSchema
+// Callers supply the per-kind mapping because dynamic iteration loses key/schema correlation.
+function mapDescriptorSchemas<Schemas extends Record<DescriptorKind, z.ZodType>>(
+  create: (kind: DescriptorKind) => z.ZodType
+): Schemas {
+  return Object.fromEntries(
+    DescriptorKindSchema.options.map((kind) => [kind, create(kind)])
+  ) as Schemas;
+}
+
+type SchemaShape<Shape> = { [K in keyof Shape]: Extract<Shape[K], z.ZodType> };
+type PreviewSchemas = {
+  [K in DescriptorKind]: z.ZodObject<
+    SchemaShape<DescriptorDefinitions[K]['preview'] & { kind: z.ZodLiteral<K> }>
+  >;
 };
-const entityBaseSchemas = {
-  magazine: MagazinePreviewSchema.extend({ description: z.string() }),
-  release: ReleasePreviewSchema.extend({ description: z.string() }),
-  series: SeriesPreviewSchema.extend({ description: z.string() }),
-  chapter: ChapterPreviewSchema.extend({ description: z.string() }),
-  page: PagePreviewSchema.extend({ dataUri: z.string() })
-};
+export const PreviewSchemas = mapDescriptorSchemas<PreviewSchemas>((kind) =>
+  z.object({ ...descriptorDefinitions[kind].preview, kind: z.literal(kind) })
+);
+export type PreviewOf<Kind extends DescriptorKind = DescriptorKind> = z.infer<PreviewSchemas[Kind]>;
 
-type ChildKinds<This extends Kind, Path extends readonly Kind[]> = Exclude<
-  Kind,
+type EntityBaseSchemas = {
+  [K in DescriptorKind]: z.ZodObject<
+    SchemaShape<PreviewSchemas[K]['shape'] & DescriptorDefinitions[K]['entity']>
+  >;
+};
+const entityBaseSchemas = mapDescriptorSchemas<EntityBaseSchemas>((kind) =>
+  z.object({ ...PreviewSchemas[kind].shape, ...descriptorDefinitions[kind].entity })
+);
+
+type ChildKinds<This extends DescriptorKind, Path extends readonly DescriptorKind[]> = Exclude<
+  DescriptorKind,
   This | Path[number]
 >;
-type PreviewShape<Keys extends Kind> = {
-  [K in Keys]: z.ZodOptional<z.ZodArray<(typeof previewSchemas)[K]>>;
+
+export type ParentPath<Parents extends readonly AnyEntity[]> = {
+  [I in keyof Parents]: Parents[I]['kind'];
 };
 
-function createPreviewShape<Keys extends Kind>(kinds: readonly Keys[]): PreviewShape<Keys> {
+export function getParentPath<const Parents extends readonly AnyEntity[]>(
+  parents: Parents
+): ParentPath<Parents> {
+  // Array.map preserves order and length but does not retain tuple types.
+  return parents.map((parent) => parent.kind) as ParentPath<Parents>;
+}
+
+export function createResourceSchema<
+  Kind extends DescriptorKind,
+  const Parents extends readonly AnyEntity[]
+>(kind: Kind, parents: Parents): EntitySchema<Kind, ParentPath<Parents>> {
+  return createEntitySchema(kind, getParentPath(parents));
+}
+
+type DescriptorPaths<
+  This extends DescriptorKind = DescriptorKind,
+  Path extends DescriptorKind[] = []
+> = {
+  [K in This]:
+    | [...Path, K]
+    | (K extends TerminalKind ? never : DescriptorPaths<ChildKinds<K, Path>, [...Path, K]>);
+}[This];
+
+export type DescriptorPath = DescriptorPaths;
+
+// Ancestor paths can be empty; complete descriptor paths cannot.
+const AncestorPathSchema = DescriptorKindSchema.array().superRefine((path, ctx) => {
+  const seen = new Set<DescriptorKind>();
+  path.forEach((kind, index) => {
+    if (seen.has(kind)) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Descriptor kinds cannot repeat in a path',
+        path: [index]
+      });
+    }
+    if (descriptorDefinitions[kind].terminal && index !== path.length - 1) {
+      ctx.addIssue({
+        code: 'custom',
+        message: `${kind[0].toUpperCase()}${kind.slice(1)} must be the last descriptor in a path`,
+        path: [index]
+      });
+    }
+    seen.add(kind);
+  });
+});
+
+export const DescriptorPathSchema = AncestorPathSchema.nonempty()
+  // Zod refinements validate the recursive tuple constraints without narrowing the array type.
+  .transform((path): DescriptorPath => path as DescriptorPath);
+
+function getChildKinds(kind: DescriptorKind, path: readonly DescriptorKind[]): DescriptorKind[] {
+  return descriptorDefinitions[kind].terminal
+    ? []
+    : DescriptorKindSchema.options.filter((child) => child !== kind && !path.includes(child));
+}
+
+type PreviewShape<Keys extends DescriptorKind> = {
+  [K in Keys]: z.ZodOptional<z.ZodArray<PreviewSchemas[K]>>;
+};
+
+function createPreviewShape<Keys extends DescriptorKind>(
+  kinds: readonly Keys[]
+): PreviewShape<Keys> {
   return Object.fromEntries(
-    kinds.map((kind) => [kind, previewSchemas[kind].array().optional()])
+    kinds.map((kind) => [kind, PreviewSchemas[kind].array().optional()])
   ) as PreviewShape<Keys>;
 }
 
-export const SuggestionsSchema = z.strictObject(createPreviewShape(KindSchema.options));
+export const SuggestionsSchema = z.strictObject(createPreviewShape(DescriptorKindSchema.options));
 export type Suggestions = z.infer<typeof SuggestionsSchema>;
 
 type EntityShape<
-  This extends Kind,
-  Path extends readonly Kind[]
+  This extends DescriptorKind,
+  Path extends readonly DescriptorKind[]
 > = (typeof entityBaseSchemas)[This]['shape'] &
-  (This extends typeof Descriptors.PAGE
+  (This extends TerminalKind
     ? Record<never, never>
-    : { has: z.ZodOptional<z.ZodObject<PreviewShape<ChildKinds<This, Path>>>> });
+    : {
+        has: z.ZodOptional<
+          z.ZodObject<
+            PreviewShape<ChildKinds<This, number extends Path['length'] ? [] : Path>>,
+            z.core.$strict
+          >
+        >;
+      });
 
-export function createEntitySchema<This extends Kind, const Path extends readonly Kind[] = []>(
-  kind: This,
-  path: Path = [] as unknown as Path
-): z.ZodObject<EntityShape<This, Path>> {
-  const children = KindSchema.options.filter(
-    (child) => child !== kind && !path.includes(child)
-  ) as ChildKinds<This, Path>[];
+type EntitySchema<
+  This extends DescriptorKind,
+  Path extends readonly DescriptorKind[]
+> = This extends DescriptorKind ? z.ZodObject<EntityShape<This, Path>, z.core.$strict> : never;
+
+export function createEntitySchema<This extends DescriptorKind>(kind: This): EntitySchema<This, []>;
+export function createEntitySchema<
+  This extends DescriptorKind,
+  const Path extends readonly DescriptorKind[]
+>(kind: This, path: Path): EntitySchema<This, Path>;
+export function createEntitySchema(
+  kind: DescriptorKind,
+  path: readonly DescriptorKind[] = []
+): z.ZodObject {
+  DescriptorPathSchema.parse([...path, kind]);
+  const children = getChildKinds(kind, path);
   return z.strictObject({
     ...entityBaseSchemas[kind].shape,
-    ...(kind === Descriptors.PAGE
+    ...(descriptorDefinitions[kind].terminal
       ? {}
       : { has: z.strictObject(createPreviewShape(children)).optional() })
-  } as EntityShape<This, Path>) as z.ZodObject<EntityShape<This, Path>>;
+  });
 }
 
-export type EntityOf<This extends Kind, Path extends readonly Kind[] = []> = z.infer<
-  (typeof entityBaseSchemas)[This]
-> &
-  (This extends typeof Descriptors.PAGE
-    ? unknown
-    : z.infer<
-        z.ZodObject<{ has: z.ZodOptional<z.ZodObject<PreviewShape<ChildKinds<This, Path>>>> }>
-      >);
-export const MagazineSchema = createEntitySchema(Descriptors.MAGAZINE);
-export const ReleaseSchema = createEntitySchema(Descriptors.RELEASE);
-export const SeriesSchema = createEntitySchema(Descriptors.SERIES);
-export const ChapterSchema = createEntitySchema(Descriptors.CHAPTER);
-export const PageSchema = createEntitySchema(Descriptors.PAGE);
-export type Magazine = z.infer<typeof MagazineSchema>;
-export type Release = z.infer<typeof ReleaseSchema>;
-export type Series = z.infer<typeof SeriesSchema>;
-export type Chapter = z.infer<typeof ChapterSchema>;
-export type Page = z.infer<typeof PageSchema>;
+export type EntityOf<
+  This extends DescriptorKind = DescriptorKind,
+  Path extends readonly DescriptorKind[] = []
+> = z.infer<EntitySchema<This, Path>>;
+export const EntitySchemas = mapDescriptorSchemas<{
+  [K in DescriptorKind]: EntitySchema<K, []>;
+}>((kind) => createEntitySchema(kind));
 
-export const AnyPreviewSchema = z.discriminatedUnion('kind', [
-  MagazinePreviewSchema,
-  ReleasePreviewSchema,
-  SeriesPreviewSchema,
-  ChapterPreviewSchema,
-  PagePreviewSchema
-]);
-export const AnyEntitySchema = z.discriminatedUnion('kind', [
-  MagazineSchema,
-  ReleaseSchema,
-  SeriesSchema,
-  ChapterSchema,
-  PageSchema
-]);
+function descriptorSchemaValues<Schemas extends Record<DescriptorKind, z.ZodType>>(
+  schemas: Schemas
+): [Schemas[DescriptorKind], ...Schemas[DescriptorKind][]] {
+  // The descriptor enum guarantees a nonempty, complete registry.
+  return Object.values(schemas) as [Schemas[DescriptorKind], ...Schemas[DescriptorKind][]];
+}
+
+export const AnyPreviewSchema = z.discriminatedUnion(
+  'kind',
+  descriptorSchemaValues(PreviewSchemas)
+);
+export const AnyEntitySchema = z.discriminatedUnion('kind', descriptorSchemaValues(EntitySchemas));
 export type AnyPreview = z.infer<typeof AnyPreviewSchema>;
 export type AnyEntity = z.infer<typeof AnyEntitySchema>;
 
-type ContextShape<Path extends readonly Kind[]> = {
+type ContextShape<Path extends readonly DescriptorKind[]> = {
   _parents: z.ZodType<{ -readonly [I in keyof Path]: EntityOf<Path[I]> }>;
-} & { [K in Path[number]]: ReturnType<typeof createEntitySchema<K>> };
+} & { [K in Path[number]]: EntitySchema<K, []> };
 
-export function createContextSchema<const Path extends readonly Kind[]>(
+export function createContextSchema<const Path extends readonly DescriptorKind[]>(
   path: Path
 ): z.ZodType<ContextOf<Path>, ContextOf<Path>> {
-  const parents = path.map((kind) => createEntitySchema(kind));
+  AncestorPathSchema.parse(path);
+  const entries = path.map((kind) => [kind, EntitySchemas[kind]] as const);
+  const parents = entries.map(([, schema]) => schema);
   return z.strictObject({
     _parents: parents.length ? z.tuple([parents[0], ...parents.slice(1)]) : z.tuple([]),
-    ...Object.fromEntries(path.map((kind) => [kind, createEntitySchema(kind)]))
+    ...Object.fromEntries(entries)
   } as unknown as ContextShape<Path>) as z.ZodType<ContextOf<Path>, ContextOf<Path>>;
 }
-export type ContextOf<Path extends readonly Kind[] = []> = {
-  _parents: z.infer<ContextShape<Path>['_parents']>;
-} & { [K in Path[number]]: EntityOf<K> };
+export type ContextOf<Path extends readonly DescriptorKind[] = []> = z.infer<
+  z.ZodObject<ContextShape<Path>, z.core.$strict>
+>;
 
 // Infer the operation signatures from their argument and result schemas.
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-function createDescriptorOpsSchema<This extends Kind, const Path extends readonly Kind[]>(
-  kind: This,
-  path: Path
-) {
+function createDescriptorOpsSchema<
+  This extends DescriptorKind,
+  const Path extends readonly DescriptorKind[]
+>(kind: This, path: Path) {
   const context = createContextSchema(path);
   const entity = createEntitySchema(kind, path);
-  const previews = previewSchemas[kind].array();
+  const previews = PreviewSchemas[kind].array();
   const operations = {
     parseUrl: z
       .function({
@@ -173,55 +260,82 @@ function createDescriptorOpsSchema<This extends Kind, const Path extends readonl
     (Path extends readonly [] ? { suggestions: typeof suggestions } : unknown));
 }
 
-type DescriptorShape<This extends Kind, Path extends readonly Kind[]> = {
+type DescriptorShape<This extends DescriptorKind, Path extends readonly DescriptorKind[]> = {
   _do: ReturnType<typeof createDescriptorOpsSchema<This, Path>>;
-} & (This extends typeof Descriptors.PAGE
+} & (This extends TerminalKind
   ? Record<never, never>
   : {
       [K in ChildKinds<This, Path>]: z.ZodOptional<
-        z.ZodObject<DescriptorShape<K, [...Path, This]>>
+        z.ZodObject<DescriptorShape<K, [...Path, This]>, z.core.$strict>
       >;
     });
 
-export function createDescriptorSchema<This extends Kind, const Path extends readonly Kind[] = []>(
-  kind: This,
-  path: Path = [] as unknown as Path
-): z.ZodObject<DescriptorShape<This, Path>> {
-  const children =
-    kind === Descriptors.PAGE
-      ? []
-      : KindSchema.options.filter((child) => child !== kind && !path.includes(child));
+type DescriptorSchema<
+  This extends DescriptorKind,
+  Path extends readonly DescriptorKind[]
+> = This extends DescriptorKind ? z.ZodObject<DescriptorShape<This, Path>, z.core.$strict> : never;
+
+export function createDescriptorSchema<This extends DescriptorKind>(
+  kind: This
+): DescriptorSchema<This, []>;
+export function createDescriptorSchema<
+  This extends DescriptorKind,
+  const Path extends readonly DescriptorKind[]
+>(kind: This, path: Path): DescriptorSchema<This, Path>;
+export function createDescriptorSchema(
+  kind: DescriptorKind,
+  path: readonly DescriptorKind[] = []
+): z.ZodObject {
+  DescriptorPathSchema.parse([...path, kind]);
+  const children = getChildKinds(kind, path);
   return z.strictObject({
     _do: createDescriptorOpsSchema(kind, path),
     ...Object.fromEntries(
       children.map((child) => [child, createDescriptorSchema(child, [...path, kind]).optional()])
     )
-  } as DescriptorShape<This, Path>) as z.ZodObject<DescriptorShape<This, Path>>;
+  });
 }
 
-export const MagazineDescriptorSchema = createDescriptorSchema(Descriptors.MAGAZINE);
-export const ReleaseDescriptorSchema = createDescriptorSchema(Descriptors.RELEASE);
-export const SeriesDescriptorSchema = createDescriptorSchema(Descriptors.SERIES);
-export const ChapterDescriptorSchema = createDescriptorSchema(Descriptors.CHAPTER);
-export const PageDescriptorSchema = createDescriptorSchema(Descriptors.PAGE);
-export type MagazineDescriptor = z.infer<typeof MagazineDescriptorSchema>;
-export type ReleaseDescriptor = z.infer<typeof ReleaseDescriptorSchema>;
-export type SeriesDescriptor = z.infer<typeof SeriesDescriptorSchema>;
-export type ChapterDescriptor = z.infer<typeof ChapterDescriptorSchema>;
-export type PageDescriptor = z.infer<typeof PageDescriptorSchema>;
+export type DescriptorOf<
+  Kind extends DescriptorKind = DescriptorKind,
+  Path extends readonly DescriptorKind[] = []
+> = z.infer<DescriptorSchema<Kind, Path>>;
+export const DescriptorSchemas = mapDescriptorSchemas<{
+  [K in DescriptorKind]: DescriptorSchema<K, []>;
+}>((kind) => createDescriptorSchema(kind));
 
-export const PluginMetadataSchema = z.object({
+export const DescriptorOperationSchema = createDescriptorOpsSchema(Descriptors.PAGE, []).keyof();
+export type DescriptorOperation = z.infer<typeof DescriptorOperationSchema>;
+
+export const DescriptorMetadataSchema = z.strictObject({
+  kind: DescriptorKindSchema,
+  operations: DescriptorOperationSchema.array()
+});
+export type DescriptorMetadata = z.infer<typeof DescriptorMetadataSchema>;
+
+const SourceMetadataBaseSchema = z.object({
+  id: z.string(),
   name: z.string(),
   language: z.enum(ISO6391.getAllCodes())
 });
-export const PluginSchema = PluginMetadataSchema.extend({
-  descriptors: z.strictObject({
-    magazine: MagazineDescriptorSchema.optional(),
-    release: ReleaseDescriptorSchema.optional(),
-    series: SeriesDescriptorSchema.optional(),
-    chapter: ChapterDescriptorSchema.optional(),
-    page: PageDescriptorSchema.optional()
-  })
+export const SourceMetadataSchema = SourceMetadataBaseSchema.extend({
+  descriptors: DescriptorMetadataSchema.array()
+});
+export const SourceSchema = SourceMetadataBaseSchema.extend({
+  descriptors: z.strictObject(DescriptorSchemas).partial()
+});
+export type SourceMetadata = z.infer<typeof SourceMetadataSchema>;
+export type Source = z.infer<typeof SourceSchema>;
+
+const PluginMetadataBaseSchema = z.object({
+  id: z.string(),
+  name: z.string()
+});
+export const PluginMetadataSchema = PluginMetadataBaseSchema.extend({
+  sources: z.array(SourceMetadataSchema)
+});
+export const PluginSchema = PluginMetadataBaseSchema.extend({
+  sources: z.array(SourceSchema).optional()
 });
 export type PluginMetadata = z.infer<typeof PluginMetadataSchema>;
 export type Plugin = z.infer<typeof PluginSchema>;

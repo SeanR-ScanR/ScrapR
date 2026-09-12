@@ -1,13 +1,9 @@
-import { app, BrowserWindow, ipcMain, shell } from 'electron';
+import { app, BrowserWindow, shell } from 'electron';
 import { join } from 'path';
 import { electronApp, is, optimizer } from '@electron-toolkit/utils';
 import icon from '@shared/assets/icon.png?asset';
-import ynjnPlugin from './plugins/ynjnPlugin';
-import { getContextPath, getDescriptor } from './utils/ContextUtils';
-import { Kind, KindSchema, PluginMetadata } from '@shared/pluginTypes';
-import internalSourceRepository from './plugins/internalSourceRepository';
-import { extractSourceMetadata } from './utils/sourceUtils';
-import { z } from 'zod';
+import { registerSourceHandlers } from './ipc/source';
+import { registerPluginHandlers } from './ipc/plugin';
 
 function createWindow(): void {
   // Create the browser window.
@@ -41,26 +37,6 @@ function createWindow(): void {
   }
 }
 
-function poc() {
-  ipcMain.handle('rootNodeKeys:get', () => {
-    return Object.keys(ynjnPlugin.descriptors).filter((d) => !d.startsWith('_'));
-  });
-
-  ipcMain.handle('availableActions:get', async (_, ctx: any, nodeKey: Kind) => {
-    const descriptor = getDescriptor(ynjnPlugin.descriptors, [...getContextPath(ctx), nodeKey]);
-    console.log(ctx, descriptor);
-    // @ts-ignore
-    return Object.keys(descriptor?._do);
-  });
-
-  ipcMain.handle('action:do', async (_, ctx: any, nodeKey: Kind, action: string, ...args) => {
-    const descriptor = getDescriptor(ynjnPlugin.descriptors, [...getContextPath(ctx), nodeKey]);
-    console.log(ctx, descriptor);
-    // @ts-ignore
-    return descriptor?._do[action](ctx, ...args);
-  });
-}
-
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
@@ -75,23 +51,9 @@ app.whenReady().then(() => {
     optimizer.watchWindowShortcuts(window);
   });
 
-  ipcMain.handle('source.list:get', (): PluginMetadata[] => {
-    return internalSourceRepository.map(extractSourceMetadata);
-  });
+  registerPluginHandlers();
 
-  ipcMain.handle(
-    'source.descriptor.root.list:get',
-    (_event, sourceId: PluginMetadata['name']): Kind[] => {
-      const source = internalSourceRepository.find((source) => source.name === sourceId);
-      if (!source) {
-        throw new Error('source not found');
-      }
-      return z.array(KindSchema).parse(Object.keys(source.descriptors));
-    }
-  );
-
-  // ===== poc =====
-  poc();
+  registerSourceHandlers();
 
   createWindow();
 

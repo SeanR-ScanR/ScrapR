@@ -4,8 +4,8 @@ import type { ReactElement } from 'react';
 export default function PageSettings(): ReactElement {
   return (
     <>
-      <Heading as="h2">Settings</Heading>
-      <Text color="gray">Les parametres ne sont pas encore disponibles.</Text>
+      <Heading as="h2">Paramètres</Heading>
+      <Text color="gray">Les paramètres ne sont pas encore disponibles.</Text>
     </>
   );
 }

@@ -1,5 +1,5 @@
 import { Flex, Heading } from '@radix-ui/themes';
-import { useId, type ReactElement, type ReactNode } from 'react';
+import { type ReactElement, type ReactNode, useId } from 'react';
 
 type PageSectionProps = {
   title: string;
