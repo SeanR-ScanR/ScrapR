@@ -4,6 +4,15 @@ import { bytesToHex } from '@noble/hashes/utils.js';
 import type { AnyEntity, DescriptorKind } from '@shared/pluginTypes';
 import { descriptorClient } from './descriptorClient';
 import { repositoryClient } from './repositoryClient';
+import { favoritesClient } from './favoritesClient';
+
+export const favoritesQueries = {
+  list: () =>
+    queryOptions({
+      queryKey: ['ipc', 'favorites:list'] as const,
+      queryFn: () => favoritesClient.list()
+    })
+};
 
 function parentContextKey(parents: readonly AnyEntity[]): string {
   return bytesToHex(sha256(new TextEncoder().encode(hashKey(parents))));

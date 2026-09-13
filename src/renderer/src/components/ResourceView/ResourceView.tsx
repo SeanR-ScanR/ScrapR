@@ -1,5 +1,6 @@
 import { Text } from '@radix-ui/themes';
 import type { ReactElement } from 'react';
+import type { FavoriteInput } from '@shared/favoriteTypes';
 import type {
   AnyEntity,
   AnyPreview,
@@ -15,6 +16,8 @@ import { descriptorLabels, resourceTitle } from '@renderer/utils/resourcePresent
 export interface ResourceViewProps {
   source: ThumbnailSource;
   resource: AnyEntity;
+  resourcePath: readonly AnyEntity[];
+  origin?: FavoriteInput['origin'];
   descriptors: DescriptorMetadata[];
   busy?: boolean;
   onOpen: (entry: AnyPreview) => void;
@@ -23,6 +26,8 @@ export interface ResourceViewProps {
 export function ResourceView({
   source,
   resource,
+  resourcePath,
+  origin,
   descriptors,
   busy,
   onOpen
@@ -51,6 +56,8 @@ export function ResourceView({
                   <ResourceGrid
                     source={{ ...source, path: DescriptorPathSchema.parse([...source.path, kind]) }}
                     entries={entries}
+                    parents={resourcePath}
+                    origin={origin}
                     canOpen={descriptors.some(
                       (descriptor) =>
                         descriptor.kind === kind && descriptor.operations.includes('get')

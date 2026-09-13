@@ -102,6 +102,8 @@ export function DescriptorBrowser({
               path: DescriptorPathSchema.parse(getParentPath(browser.path))
             }}
             resource={browser.current}
+            resourcePath={browser.path}
+            origin={search.origin}
             descriptors={browser.children}
             busy={browser.opening}
             onOpen={browser.open}
@@ -162,6 +164,7 @@ export function DescriptorBrowser({
             {browser.entries.length ? (
               <ResourceGrid
                 source={{ pluginId, sourceId: source.id, path: [descriptor.kind] }}
+                parents={[]}
                 entries={browser.entries}
                 canOpen={descriptor.operations.includes('get')}
                 busy={browser.opening}

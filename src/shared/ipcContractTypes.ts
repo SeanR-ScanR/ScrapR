@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { FavoriteIdentitySchema, FavoriteInputSchema, FavoriteSchema } from './favoriteTypes';
 import {
   AnyEntitySchema,
   createResourceSchema,
@@ -38,6 +39,9 @@ function contract<Input extends z.ZodType<unknown[]>, Output extends z.ZodType>(
 }
 
 export const IpcContracts = {
+  'favorites:list': contract(z.tuple([]), () => FavoriteSchema.array()),
+  'favorites:add': contract(z.tuple([FavoriteInputSchema]), () => FavoriteSchema.array()),
+  'favorites:remove': contract(z.tuple([FavoriteIdentitySchema]), () => FavoriteSchema.array()),
   'plugin:list': contract(z.tuple([]), () => PluginMetadataSchema.array()),
   'plugin.source:list': contract(z.tuple([pluginId]), () => SourceMetadataSchema.array()),
   'plugin.source:get': contract(z.tuple([pluginId, sourceId]), () => SourceMetadataSchema),

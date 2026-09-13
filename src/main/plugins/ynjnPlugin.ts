@@ -261,7 +261,10 @@ const ynjnPlugin: Plugin = {
                     kind: Descriptors.PAGE,
                     id,
                     dataUri,
-                    thumbnail: dataUri
+                    thumbnail: {
+                      key: rawPageData.page_image_url,
+                      payload: { url: rawPageData.page_image_url }
+                    }
                   };
                 },
                 loadThumbnail: async (payload, { signal, priority }) => {

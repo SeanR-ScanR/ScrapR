@@ -1,0 +1,77 @@
+.resource-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.resource-card-title,
+.resource-card-description {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.resource-card-footer {
+  margin-top: auto;
+  align-items: flex-end;
+}
+
+.resource-card-actions {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.resource-card-actions > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.resource-card-actions[data-position='bottom-left'] {
+  flex: 1;
+}
+
+.resource-card-actions[data-position='bottom-right'] {
+  flex: 1;
+  margin-left: auto;
+  flex-direction: row-reverse;
+}
+
+.resource-card-actions[data-position^='thumbnail-'] {
+  position: absolute;
+  z-index: 1;
+  max-width: calc(50% - var(--space-2) * 1.5);
+}
+
+.resource-card-actions[data-position^='thumbnail-top-'] {
+  top: var(--space-2);
+}
+
+.resource-card-actions[data-position^='thumbnail-bottom-'] {
+  bottom: var(--space-2);
+}
+
+.resource-card-actions[data-position^='thumbnail-'][data-position$='-left'] {
+  left: var(--space-2);
+}
+
+.resource-card-actions[data-position^='thumbnail-'][data-position$='-right'] {
+  right: var(--space-2);
+  flex-direction: row-reverse;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .resource-card-favorite[aria-pressed='false']:not([aria-busy='true']) {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .resource-card:hover .resource-card-favorite,
+  .resource-card:focus-within .resource-card-favorite {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}

@@ -6,16 +6,14 @@ import {
   type DescriptorPath
 } from '@shared/pluginTypes';
 import { queryOptions, type QueryClient } from '@tanstack/react-query';
-import { z } from 'zod';
+import {
+  ResourceReferenceSchema,
+  ResourceOriginSchema,
+  type ResourceReference
+} from '@shared/favoriteTypes';
 import { descriptorQueries } from './ipcQueries';
 
-const resourceReferenceSchema = z.strictObject({ kind: DescriptorKindSchema, id: z.string() });
-export type ResourceReference = z.infer<typeof resourceReferenceSchema>;
-
-const originSchema = z.strictObject({
-  url: z.url({ protocol: /^https?$/ }),
-  path: DescriptorPathSchema
-});
+export type { ResourceReference } from '@shared/favoriteTypes';
 
 export interface ExploreSearch {
   kind?: DescriptorKind;
@@ -29,7 +27,7 @@ export function validateExploreSearch(search: Record<string, unknown>): ExploreS
   const resource =
     search.resource === undefined
       ? undefined
-      : resourceReferenceSchema.array().nonempty().parse(search.resource);
+      : ResourceReferenceSchema.array().nonempty().parse(search.resource);
   if (resource) DescriptorPathSchema.parse(resource.map((entry) => entry.kind));
   if (resource && kind.success && resource[0].kind !== kind.data) {
     throw new Error('The resource path does not match the selected descriptor.');
@@ -39,7 +37,7 @@ export function validateExploreSearch(search: Record<string, unknown>): ExploreS
     ...(typeof search.query === 'string' && search.query ? { query: search.query } : {}),
     ...(resource ? { resource } : {}),
     ...(resource && search.origin !== undefined
-      ? { origin: originSchema.parse(search.origin) }
+      ? { origin: ResourceOriginSchema.parse(search.origin) }
       : {})
   };
 }
