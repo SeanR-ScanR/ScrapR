@@ -5,9 +5,10 @@ import { useNavigate, useRouter } from '@tanstack/react-router';
 import { useQueryClient } from '@tanstack/react-query';
 import * as UrlForm from '@renderer/components/UrlForm/UrlForm';
 import { descriptorQueries } from '@renderer/services/ipcQueries';
-import { resourcePathQuery } from '@renderer/services/exploreNavigation';
+import { resourcePathQuery } from '@renderer/services/discoverNavigation';
 import { descriptorLabels } from '@renderer/utils/resourcePresentation';
 import type { UrlDiscoveryResult } from '@shared/pluginTypes';
+import { LoadingState } from '@renderer/components/LoadingState/LoadingState';
 
 type Match = UrlDiscoveryResult['matches'][number];
 
@@ -57,7 +58,7 @@ export function UrlParser(): ReactElement {
         path
       );
       await navigate({
-        to: '/explore/$pluginId/$sourceId',
+        to: '/discover/$pluginId/$sourceId',
         params: { pluginId: match.pluginId, sourceId: match.sourceId },
         search: { kind: resource[0].kind, resource, origin }
       });
@@ -157,7 +158,7 @@ export function UrlParser(): ReactElement {
             Choisissez la source et le type de ressource. Seul votre choix sera analyse.
           </Dialog.Description>
           <Flex direction="column" gap="3">
-            {busy && <Text role="status">Chargement...</Text>}
+            {busy && <LoadingState compact />}
             {errors.map((error, index) => (
               <Text key={index} role="alert" color="red">
                 {error}

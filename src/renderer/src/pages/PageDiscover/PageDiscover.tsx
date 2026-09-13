@@ -1,14 +1,12 @@
 import { Box, Tabs, Text } from '@radix-ui/themes';
-import { Link } from '@tanstack/react-router';
 import type { ReactElement } from 'react';
 import { PageSection } from '@renderer/components/PageSection/PageSection';
 import { DescriptorBrowser } from '@renderer/components/DescriptorBrowser/DescriptorBrowser';
 import { descriptorLabels } from '@renderer/utils/resourcePresentation';
-import * as Breadcrumbs from '@renderer/components/Breadcrumbs/Breadcrumbs';
 import type { SourceMetadata } from '@shared/pluginTypes';
-import type { ExploreSearch } from '@renderer/services/exploreNavigation';
+import type { DiscoverSearch } from '@renderer/services/discoverNavigation';
 
-export default function PageExplore({
+export default function PageDiscover({
   pluginId,
   source,
   search,
@@ -16,15 +14,14 @@ export default function PageExplore({
 }: {
   pluginId: string;
   source: SourceMetadata;
-  search: ExploreSearch;
-  navigate: (search: ExploreSearch) => void;
+  search: DiscoverSearch;
+  navigate: (search: DiscoverSearch) => void;
 }): ReactElement {
   const { descriptors } = source;
   const selected = descriptors.find(({ kind }) => kind === search.kind) ?? descriptors[0];
 
   return (
-    <PageSection title={`Explorer : ${source.name}`}>
-      <Link to="/sources">Sources</Link>
+    <PageSection title={`Parcourir: ${source.name}`}>
       {descriptors.length ? (
         <Tabs.Root
           value={selected.kind}
@@ -52,22 +49,12 @@ export default function PageExplore({
                   descriptor={descriptor}
                   search={search}
                   navigate={navigate}
-                  breadcrumbs={
-                    <>
-                      <Breadcrumbs.Item>
-                        <Breadcrumbs.Link asChild>
-                          <Link to="/sources">Sources</Link>
-                        </Breadcrumbs.Link>
-                      </Breadcrumbs.Item>
-                      <Breadcrumbs.Separator />
-                    </>
-                  }
                 />
               </Tabs.Content>
             ))}
         </Tabs.Root>
       ) : (
-        <Text>Cette source ne propose aucun type de ressource à explorer.</Text>
+        <Text>Cette source ne propose aucun type de ressource à parcourir.</Text>
       )}
     </PageSection>
   );

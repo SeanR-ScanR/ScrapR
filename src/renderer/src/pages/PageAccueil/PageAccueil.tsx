@@ -16,6 +16,7 @@ export default function PageAccueil(): ReactElement {
       <PageSection title="Favoris">
         <RequestState
           loading={favorites.loading}
+          fetching={favorites.fetching}
           hasData={favorites.hasData}
           error={favorites.error}
           onRetry={favorites.retry}
@@ -68,7 +69,7 @@ export default function PageAccueil(): ReactElement {
                         <ResourceCard.Actions position="bottom-right">
                           <Button asChild variant="soft">
                             <Link
-                              to="/explore/$pluginId/$sourceId"
+                              to="/discover/$pluginId/$sourceId"
                               params={{ pluginId: favorite.pluginId, sourceId: favorite.sourceId }}
                               search={{
                                 kind: favorite.resource[0].kind,

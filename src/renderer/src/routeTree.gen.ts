@@ -13,7 +13,7 @@ import { Route as IndexRouteImport } from './routes/index';
 import { Route as ExtensionRouteRouteImport } from './routes/extension/route';
 import { Route as SettingsRouteRouteImport } from './routes/settings/route';
 import { Route as SourcesRouteRouteImport } from './routes/sources/route';
-import { Route as ExplorePluginIdSourceIdRouteImport } from './routes/explore.$pluginId.$sourceId';
+import { Route as DiscoverPluginIdSourceIdRouteImport } from './routes/discover.$pluginId.$sourceId';
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -35,25 +35,26 @@ const SourcesRouteRoute = SourcesRouteRouteImport.update({
   path: '/sources',
   getParentRoute: () => rootRouteImport,
 } as any);
-const ExplorePluginIdSourceIdRoute = ExplorePluginIdSourceIdRouteImport.update({
-  id: '/explore/$pluginId/$sourceId',
-  path: '/explore/$pluginId/$sourceId',
-  getParentRoute: () => rootRouteImport,
-} as any);
+const DiscoverPluginIdSourceIdRoute =
+  DiscoverPluginIdSourceIdRouteImport.update({
+    id: '/discover/$pluginId/$sourceId',
+    path: '/discover/$pluginId/$sourceId',
+    getParentRoute: () => rootRouteImport,
+  } as any);
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute;
   '/extension': typeof ExtensionRouteRoute;
   '/settings': typeof SettingsRouteRoute;
   '/sources': typeof SourcesRouteRoute;
-  '/explore/$pluginId/$sourceId': typeof ExplorePluginIdSourceIdRoute;
+  '/discover/$pluginId/$sourceId': typeof DiscoverPluginIdSourceIdRoute;
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute;
   '/extension': typeof ExtensionRouteRoute;
   '/settings': typeof SettingsRouteRoute;
   '/sources': typeof SourcesRouteRoute;
-  '/explore/$pluginId/$sourceId': typeof ExplorePluginIdSourceIdRoute;
+  '/discover/$pluginId/$sourceId': typeof DiscoverPluginIdSourceIdRoute;
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport;
@@ -61,7 +62,7 @@ export interface FileRoutesById {
   '/extension': typeof ExtensionRouteRoute;
   '/settings': typeof SettingsRouteRoute;
   '/sources': typeof SourcesRouteRoute;
-  '/explore/$pluginId/$sourceId': typeof ExplorePluginIdSourceIdRoute;
+  '/discover/$pluginId/$sourceId': typeof DiscoverPluginIdSourceIdRoute;
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath;
@@ -70,21 +71,21 @@ export interface FileRouteTypes {
     | '/extension'
     | '/settings'
     | '/sources'
-    | '/explore/$pluginId/$sourceId';
+    | '/discover/$pluginId/$sourceId';
   fileRoutesByTo: FileRoutesByTo;
   to:
     | '/'
     | '/extension'
     | '/settings'
     | '/sources'
-    | '/explore/$pluginId/$sourceId';
+    | '/discover/$pluginId/$sourceId';
   id:
     | '__root__'
     | '/'
     | '/extension'
     | '/settings'
     | '/sources'
-    | '/explore/$pluginId/$sourceId';
+    | '/discover/$pluginId/$sourceId';
   fileRoutesById: FileRoutesById;
 }
 export interface RootRouteChildren {
@@ -92,7 +93,7 @@ export interface RootRouteChildren {
   ExtensionRouteRoute: typeof ExtensionRouteRoute;
   SettingsRouteRoute: typeof SettingsRouteRoute;
   SourcesRouteRoute: typeof SourcesRouteRoute;
-  ExplorePluginIdSourceIdRoute: typeof ExplorePluginIdSourceIdRoute;
+  DiscoverPluginIdSourceIdRoute: typeof DiscoverPluginIdSourceIdRoute;
 }
 
 declare module '@tanstack/react-router' {
@@ -125,11 +126,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SourcesRouteRouteImport;
       parentRoute: typeof rootRouteImport;
     };
-    '/explore/$pluginId/$sourceId': {
-      id: '/explore/$pluginId/$sourceId';
-      path: '/explore/$pluginId/$sourceId';
-      fullPath: '/explore/$pluginId/$sourceId';
-      preLoaderRoute: typeof ExplorePluginIdSourceIdRouteImport;
+    '/discover/$pluginId/$sourceId': {
+      id: '/discover/$pluginId/$sourceId';
+      path: '/discover/$pluginId/$sourceId';
+      fullPath: '/discover/$pluginId/$sourceId';
+      preLoaderRoute: typeof DiscoverPluginIdSourceIdRouteImport;
       parentRoute: typeof rootRouteImport;
     };
   }
@@ -140,7 +141,7 @@ const rootRouteChildren: RootRouteChildren = {
   ExtensionRouteRoute: ExtensionRouteRoute,
   SettingsRouteRoute: SettingsRouteRoute,
   SourcesRouteRoute: SourcesRouteRoute,
-  ExplorePluginIdSourceIdRoute: ExplorePluginIdSourceIdRoute,
+  DiscoverPluginIdSourceIdRoute: DiscoverPluginIdSourceIdRoute,
 };
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

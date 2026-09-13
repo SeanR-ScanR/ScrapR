@@ -15,14 +15,14 @@ import { descriptorQueries } from './ipcQueries';
 
 export type { ResourceReference } from '@shared/favoriteTypes';
 
-export interface ExploreSearch {
+export interface DiscoverSearch {
   kind?: DescriptorKind;
   query?: string;
   resource?: ResourceReference[];
   origin?: { url: string; path: DescriptorPath };
 }
 
-export function validateExploreSearch(search: Record<string, unknown>): ExploreSearch {
+export function validateDiscoverSearch(search: Record<string, unknown>): DiscoverSearch {
   const kind = DescriptorKindSchema.safeParse(search.kind);
   const resource =
     search.resource === undefined
@@ -47,7 +47,7 @@ export function resourcePathQuery(
   pluginId: string,
   sourceId: string,
   references: readonly ResourceReference[],
-  origin?: ExploreSearch['origin']
+  origin?: DiscoverSearch['origin']
 ) {
   return queryOptions({
     queryKey: ['resource-path', pluginId, sourceId, references, origin] as const,

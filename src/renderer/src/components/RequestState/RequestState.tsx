@@ -1,5 +1,6 @@
 import { Button, Flex, Text } from '@radix-ui/themes';
 import type { ReactElement, ReactNode } from 'react';
+import { LoadingState } from '@renderer/components/LoadingState/LoadingState';
 
 export interface RequestStateProps {
   loading: boolean;
@@ -20,7 +21,7 @@ export function RequestState({
   loadingLabel = 'Chargement...',
   children
 }: RequestStateProps): ReactElement {
-  if (loading) return <Text role="status">{loadingLabel}</Text>;
+  if (loading || fetching) return <LoadingState label={loadingLabel} />;
   return (
     <>
       {error && (
@@ -28,12 +29,9 @@ export function RequestState({
           <Text role="alert" color="red">
             {error}
           </Text>
-          <Button onClick={onRetry} disabled={fetching}>
-            Réessayer
-          </Button>
+          <Button onClick={onRetry}>Réessayer</Button>
         </Flex>
       )}
-      {fetching && <Text role="status">{loadingLabel}</Text>}
       {(!error || hasData) && children}
     </>
   );

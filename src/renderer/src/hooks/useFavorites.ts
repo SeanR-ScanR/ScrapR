@@ -7,6 +7,7 @@ export function useFavorites(): {
   items: Favorite[];
   has: (identity: FavoriteIdentity) => boolean;
   loading: boolean;
+  fetching: boolean;
   hasData: boolean;
   disabled: boolean;
   isPending: (identity: FavoriteIdentity) => boolean;
@@ -52,6 +53,7 @@ export function useFavorites(): {
     items: query.data ?? [],
     has: (identity: FavoriteIdentity) => keys.has(favoriteKey(identity)),
     loading: query.isLoading,
+    fetching: query.isFetching,
     hasData: query.data !== undefined,
     disabled: query.data === undefined || query.isError,
     isPending: (identity: FavoriteIdentity) => {

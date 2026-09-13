@@ -89,9 +89,9 @@ export default function PageSources(): ReactElement {
                     <SourceList.Actions aria-label={`Actions pour ${source.name}`}>
                       <IconButton size="2" variant="soft" asChild>
                         <Link
-                          to="/explore/$pluginId/$sourceId"
+                          to="/discover/$pluginId/$sourceId"
                           params={{ pluginId, sourceId: source.id }}
-                          aria-label={`Explorer ${source.name}`}
+                          aria-label={`Parcourir ${source.name}`}
                         >
                           <GlobeIcon size={18} aria-hidden="true" />
                         </Link>

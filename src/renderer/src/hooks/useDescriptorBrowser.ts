@@ -2,15 +2,15 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from '@tanstack/react-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { descriptorQueries } from '@renderer/services/ipcQueries';
-import { resourcePathQuery, type ExploreSearch } from '@renderer/services/exploreNavigation';
+import { resourcePathQuery, type DiscoverSearch } from '@renderer/services/discoverNavigation';
 import type { AnyEntity, AnyPreview, DescriptorMetadata } from '@shared/pluginTypes';
 
 export function useDescriptorBrowser(
   pluginId: string,
   sourceId: string,
   descriptor: DescriptorMetadata,
-  routeSearch: ExploreSearch,
-  navigate: (search: ExploreSearch) => void
+  routeSearch: DiscoverSearch,
+  navigate: (search: DiscoverSearch) => void
 ): {
   query: string;
   entries: AnyPreview[];
@@ -22,6 +22,7 @@ export function useDescriptorBrowser(
   current: AnyEntity | undefined;
   children: DescriptorMetadata[];
   opening: boolean;
+  openingEntry: AnyPreview | null;
   detailError: string;
   resourcePending: boolean;
   retryResource: () => void;
@@ -59,7 +60,7 @@ export function useDescriptorBrowser(
     ),
     enabled: !!current
   });
-  const [opening, setOpening] = useState(false);
+  const [openingEntry, setOpeningEntry] = useState<AnyPreview | null>(null);
   const [detailError, setDetailError] = useState('');
   const detailRequest = useRef(0);
 
@@ -84,7 +85,7 @@ export function useDescriptorBrowser(
 
   async function open(entry: AnyPreview): Promise<void> {
     const id = ++detailRequest.current;
-    setOpening(true);
+    setOpeningEntry(entry);
     setDetailError('');
     try {
       const entity = await queryClient.query(
@@ -109,11 +110,14 @@ export function useDescriptorBrowser(
       if (id === detailRequest.current)
         setDetailError(error instanceof Error ? error.message : String(error));
     } finally {
-      if (id === detailRequest.current) setOpening(false);
+      if (id === detailRequest.current) setOpeningEntry(null);
     }
   }
 
   function back(depth: number): void {
+    detailRequest.current += 1;
+    setOpeningEntry(null);
+    setDetailError('');
     const sliced = references.slice(0, Math.max(0, depth));
     navigate({
       kind,
@@ -133,10 +137,11 @@ export function useDescriptorBrowser(
     path,
     current,
     children: current ? (childrenQuery.data ?? []) : [],
+    openingEntry,
     opening:
-      opening ||
+      openingEntry !== null ||
       (references.length > 0 && pathQuery.isFetching) ||
-      (!!current && childrenQuery.isLoading),
+      (!!current && childrenQuery.isFetching),
     detailError:
       detailError ||
       (references.length ? (pathQuery.error?.message ?? '') : '') ||

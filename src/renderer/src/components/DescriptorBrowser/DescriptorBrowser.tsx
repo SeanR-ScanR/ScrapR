@@ -1,24 +1,24 @@
 import { Button, Flex, Heading, Text } from '@radix-ui/themes';
-import { SearchIcon } from 'lucide-react';
-import { Fragment, type ReactElement, type ReactNode, useState } from 'react';
+import { FolderRootIcon, SearchIcon } from 'lucide-react';
+import { Fragment, type ReactElement, useState } from 'react';
 import type { DescriptorMetadata, SourceMetadata } from '@shared/pluginTypes';
 import { DescriptorPathSchema, getParentPath } from '@shared/pluginTypes';
 import * as Breadcrumbs from '@renderer/components/Breadcrumbs/Breadcrumbs';
 import * as SearchForm from '@renderer/components/SearchForm/SearchForm';
 import { RequestState } from '@renderer/components/RequestState/RequestState';
+import { LoadingState } from '@renderer/components/LoadingState/LoadingState';
 import { ResourceGrid } from '@renderer/components/ResourceGrid/ResourceGrid';
 import { ResourceView } from '@renderer/components/ResourceView/ResourceView';
 import { useDescriptorBrowser } from '@renderer/hooks/useDescriptorBrowser';
 import { descriptorLabels, resourceTitle } from '@renderer/utils/resourcePresentation';
-import type { ExploreSearch } from '@renderer/services/exploreNavigation';
+import type { DiscoverSearch } from '@renderer/services/discoverNavigation';
 
 export interface DescriptorBrowserProps {
   pluginId: string;
   source: SourceMetadata;
   descriptor: DescriptorMetadata;
-  search: ExploreSearch;
-  navigate: (search: ExploreSearch) => void;
-  breadcrumbs?: ReactNode;
+  search: DiscoverSearch;
+  navigate: (search: DiscoverSearch) => void;
 }
 
 export function DescriptorBrowser({
@@ -26,8 +26,7 @@ export function DescriptorBrowser({
   source,
   descriptor,
   search,
-  navigate,
-  breadcrumbs
+  navigate
 }: DescriptorBrowserProps): ReactElement {
   const browser = useDescriptorBrowser(pluginId, source.id, descriptor, search, navigate);
   const [input, setInput] = useState(browser.query);
@@ -35,54 +34,46 @@ export function DescriptorBrowser({
   const label = descriptorLabels[descriptor.kind];
 
   return (
-    <Flex direction="column" gap="4" pt="4" aria-busy={browser.loading || browser.opening}>
+    <Flex direction="column" gap="4" pt="4" aria-busy={browser.fetching || browser.opening}>
       <Breadcrumbs.Root>
         <Breadcrumbs.List>
-          {breadcrumbs}
-          <Breadcrumbs.Item>
-            <Breadcrumbs.Link asChild>
-              <button type="button" onClick={() => void browser.back(0)}>
-                {source.name}
-              </button>
-            </Breadcrumbs.Link>
-          </Breadcrumbs.Item>
-          <Breadcrumbs.Separator />
-          <Breadcrumbs.Item>
-            {browser.current ? (
+          {(browser.current || browser.openingEntry || browser.resourcePending) && (
+            <Breadcrumbs.Item>
               <Breadcrumbs.Link asChild>
-                <button type="button" onClick={() => void browser.back(0)}>
-                  {label}
+                <button
+                  type="button"
+                  aria-label="Retour aux resultats"
+                  onClick={() => void browser.back(0)}
+                >
+                  <FolderRootIcon />
                 </button>
               </Breadcrumbs.Link>
-            ) : (
-              <Breadcrumbs.Current>{label}</Breadcrumbs.Current>
-            )}
-          </Breadcrumbs.Item>
-          {browser.path.map((entity, index) => (
-            <Fragment key={`${entity.kind}:${entity.id}`}>
-              <Breadcrumbs.Separator />
-              <Breadcrumbs.Item>
-                {index === browser.path.length - 1 ? (
-                  <Breadcrumbs.Current>{resourceTitle(entity)}</Breadcrumbs.Current>
-                ) : (
+            </Breadcrumbs.Item>
+          )}
+          {(browser.openingEntry ? browser.path : browser.path.slice(0, -1)).map(
+            (entity, index) => (
+              <Fragment key={`${entity.kind}:${entity.id}`}>
+                <Breadcrumbs.Separator />
+                <Breadcrumbs.Item>
                   <Breadcrumbs.Link asChild>
                     <button type="button" onClick={() => void browser.back(index + 1)}>
                       {resourceTitle(entity)}
                     </button>
                   </Breadcrumbs.Link>
-                )}
-              </Breadcrumbs.Item>
-            </Fragment>
-          ))}
+                </Breadcrumbs.Item>
+              </Fragment>
+            )
+          )}
         </Breadcrumbs.List>
       </Breadcrumbs.Root>
-      {browser.opening && <Text role="status">Chargement de la ressource...</Text>}
       {browser.detailError && (
         <Text role="alert" color="red">
           {browser.detailError}
         </Text>
       )}
-      {browser.resourcePending ? (
+      {browser.opening ? (
+        <LoadingState label="Chargement de la ressource..." />
+      ) : browser.resourcePending ? (
         <Flex direction="column" gap="2">
           {browser.detailError && (
             <Button variant="soft" onClick={browser.retryResource} style={{ alignSelf: 'start' }}>

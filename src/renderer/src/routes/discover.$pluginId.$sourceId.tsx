@@ -1,15 +1,15 @@
 import { createFileRoute, type ErrorComponentProps, Link, useRouter } from '@tanstack/react-router';
-import { Text } from '@radix-ui/themes';
 import { useEffect } from 'react';
 import { useQueryErrorResetBoundary, useSuspenseQuery } from '@tanstack/react-query';
-import PageExplore from '@renderer/pages/PageExplore/PageExplore';
+import PageDiscover from '@renderer/pages/PageDiscover/PageDiscover';
 import { PageSection } from '@renderer/components/PageSection/PageSection';
 import { RequestState } from '@renderer/components/RequestState/RequestState';
+import { LoadingState } from '@renderer/components/LoadingState/LoadingState';
 import { repositoryQueries } from '@renderer/services/ipcQueries';
-import { validateExploreSearch } from '@renderer/services/exploreNavigation';
+import { validateDiscoverSearch } from '@renderer/services/discoverNavigation';
 
-export const Route = createFileRoute('/explore/$pluginId/$sourceId')({
-  validateSearch: validateExploreSearch,
+export const Route = createFileRoute('/discover/$pluginId/$sourceId')({
+  validateSearch: validateDiscoverSearch,
   loader: async ({ params, context: { queryClient } }): Promise<void> => {
     const plugins = await queryClient.query(repositoryQueries.listPlugins());
     const plugin = plugins.find((plugin) => plugin.id === params.pluginId);
@@ -18,9 +18,11 @@ export const Route = createFileRoute('/explore/$pluginId/$sourceId')({
     }
     await queryClient.query(repositoryQueries.getSource(params.pluginId, params.sourceId));
   },
+  pendingMs: 0,
+  pendingMinMs: 0,
   pendingComponent: () => (
-    <PageSection title="Explorer">
-      <Text role="status">Chargement de la source...</Text>
+    <PageSection title="Parcourir">
+      <LoadingState label="Chargement de la source..." />
     </PageSection>
   ),
   errorComponent: ExploreError,
@@ -34,7 +36,7 @@ function ExploreError({ error }: ErrorComponentProps): React.JSX.Element {
     reset();
   }, [reset]);
   return (
-    <PageSection title="Explorer">
+    <PageSection title="Parcourir">
       <Link to="/sources">Sources</Link>
       <RequestState
         loading={false}
@@ -59,9 +61,9 @@ function ExploreRoute(): React.JSX.Element {
       hasData
       error={sourceQuery.error?.message ?? ''}
       onRetry={() => void sourceQuery.refetch()}
-      loadingLabel="Chargement de la source..."
+      loadingLabel="Actualisation de la source..."
     >
-      <PageExplore
+      <PageDiscover
         key={JSON.stringify([pluginId, sourceId, search])}
         pluginId={pluginId}
         source={sourceQuery.data}
