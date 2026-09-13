@@ -53,14 +53,20 @@ export function ResourceView({
   return (
     <ResourceDetails.Root>
       <Flex direction={{ initial: 'column', sm: 'row' }} align="start" gap="4">
-        <Box width="100%" maxWidth="240px" flexShrink="0">
-          <ResourceCard.Root>
-            <ResourceCard.Thumbnail>
-              <ResourceCard.ThumbnailImage image={resource.thumbnail} source={source} alt={title} />
-              <ResourceCard.ThumbnailFallback />
-            </ResourceCard.Thumbnail>
-          </ResourceCard.Root>
-        </Box>
+        {resource.kind !== 'page' && (
+          <Box width="100%" maxWidth="240px" flexShrink="0">
+            <ResourceCard.Root>
+              <ResourceCard.Thumbnail>
+                <ResourceCard.ThumbnailImage
+                  image={resource.thumbnail}
+                  source={source}
+                  alt={title}
+                />
+                <ResourceCard.ThumbnailFallback />
+              </ResourceCard.Thumbnail>
+            </ResourceCard.Root>
+          </Box>
+        )}
         <Flex direction="column" gap="3" style={{ minWidth: 0, overflowWrap: 'anywhere' }}>
           <Flex align="start" gap="3">
             <ResourceDetails.Title>{title}</ResourceDetails.Title>
