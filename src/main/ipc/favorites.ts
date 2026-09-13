@@ -46,8 +46,7 @@ export function registerFavoritesHandlers(): void {
     let thumbnail: z.infer<typeof FavoriteThumbnailSchema> | undefined;
     try {
       thumbnail = FavoriteThumbnailSchema.safeParse(detail.thumbnail).data;
-    } catch {
-    }
+    } catch {}
     const store = await getStore();
     const document = FavoritesDocumentSchema.parse(store.store);
     const key = favoriteKey(identity);
