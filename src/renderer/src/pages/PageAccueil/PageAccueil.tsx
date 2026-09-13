@@ -3,9 +3,9 @@ import type { ReactElement } from 'react';
 import { Link } from '@tanstack/react-router';
 import { favoriteKey } from '@shared/favoriteTypes';
 import { DescriptorPathSchema } from '@shared/pluginTypes';
-import * as ResourceCard from '@renderer/components/ResourceCard/ResourceCard';
-import { PageSection } from '@renderer/components/PageSection/PageSection';
-import { RequestState } from '@renderer/components/RequestState/RequestState';
+import * as ResourceCard from '@renderer/components/shared/ResourceCard/ResourceCard';
+import { PageSection } from '@renderer/components/shared/PageSection/PageSection';
+import { RequestState } from '@renderer/components/shared/RequestState/RequestState';
 import { useFavorites } from '@renderer/hooks/useFavorites';
 import { descriptorLabels } from '@renderer/utils/resourcePresentation';
 

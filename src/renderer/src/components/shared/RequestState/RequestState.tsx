@@ -1,6 +1,6 @@
 import { Button, Flex, Text } from '@radix-ui/themes';
 import type { ReactElement, ReactNode } from 'react';
-import { LoadingState } from '@renderer/components/LoadingState/LoadingState';
+import { LoadingState } from '@renderer/components/shared/LoadingState/LoadingState';
 
 export interface RequestStateProps {
   loading: boolean;

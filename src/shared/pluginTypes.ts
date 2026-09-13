@@ -2,11 +2,14 @@ import ISO6391 from 'iso-639-1';
 import { z } from 'zod';
 
 export const Descriptors = {
-  MAGAZINE: 'magazine',
-  RELEASE: 'release',
-  SERIES: 'series',
-  CHAPTER: 'chapter',
-  PAGE: 'page'
+  MAGAZINE: 'magazine', // Un magazine
+  RELEASE: 'release', // Une parution du magazine
+
+  MANGA: 'manga', // Un manga
+  VOLUME: 'volume', // Le tome d'un manga
+
+  CHAPTER: 'chapter', // Le chapitre
+  PAGE: 'page' // Une page
 } as const;
 
 export const DescriptorKindSchema = z.enum(Descriptors);
@@ -59,7 +62,8 @@ const descriptorDefinitions = {
     entity: descriptionShape,
     terminal: false
   },
-  [Descriptors.SERIES]: { preview: titledPreviewShape, entity: descriptionShape, terminal: false },
+  [Descriptors.MANGA]: { preview: titledPreviewShape, entity: descriptionShape, terminal: false },
+  [Descriptors.VOLUME]: { preview: titledPreviewShape, entity: descriptionShape, terminal: false },
   [Descriptors.CHAPTER]: { preview: titledPreviewShape, entity: descriptionShape, terminal: false },
   [Descriptors.PAGE]: {
     preview: previewShape,
@@ -298,6 +302,7 @@ export function createContextSchema<const Path extends readonly DescriptorKind[]
     ...Object.fromEntries(entries)
   } as unknown as ContextShape<Path>) as z.ZodType<ContextOf<Path>, ContextOf<Path>>;
 }
+
 export type ContextOf<Path extends readonly DescriptorKind[] = []> = z.infer<
   z.ZodObject<ContextShape<Path>, z.core.$strict>
 >;

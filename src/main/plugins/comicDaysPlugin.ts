@@ -19,7 +19,7 @@ const comicDaysPlugin: Plugin = {
       name: 'comic-days',
       language: 'ja',
       descriptors: {
-        series: {
+        manga: {
           _do: {
             search: async (_, query) => {
               const apiRes = await aFetch.get(`https://comic-days.com/search?q=${query}`);
@@ -29,7 +29,7 @@ const comicDaysPlugin: Plugin = {
                 '.search-container .series-list li'
               );
               return seriesHtml.map((t) => ({
-                kind: Descriptors.SERIES,
+                kind: Descriptors.MANGA,
                 id: '0',
                 title: t.attributes['data-title']
               }));

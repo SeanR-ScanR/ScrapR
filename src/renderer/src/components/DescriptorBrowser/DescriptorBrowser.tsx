@@ -1,17 +1,17 @@
 import { Button, Flex, Heading, Text } from '@radix-ui/themes';
-import { FolderRootIcon, SearchIcon } from 'lucide-react';
-import { Fragment, type ReactElement, useState } from 'react';
+import { SearchIcon } from 'lucide-react';
+import { type ReactElement, useState } from 'react';
 import type { DescriptorMetadata, SourceMetadata } from '@shared/pluginTypes';
 import { DescriptorPathSchema, getParentPath } from '@shared/pluginTypes';
-import * as Breadcrumbs from '@renderer/components/Breadcrumbs/Breadcrumbs';
-import * as SearchForm from '@renderer/components/SearchForm/SearchForm';
-import { RequestState } from '@renderer/components/RequestState/RequestState';
-import { LoadingState } from '@renderer/components/LoadingState/LoadingState';
+import * as SearchForm from '@renderer/components/shared/SearchForm/SearchForm';
+import { RequestState } from '@renderer/components/shared/RequestState/RequestState';
+import { LoadingState } from '@renderer/components/shared/LoadingState/LoadingState';
 import { ResourceGrid } from '@renderer/components/ResourceGrid/ResourceGrid';
 import { ResourceView } from '@renderer/components/ResourceView/ResourceView';
 import { useDescriptorBrowser } from '@renderer/hooks/useDescriptorBrowser';
-import { descriptorLabels, resourceTitle } from '@renderer/utils/resourcePresentation';
+import { descriptorLabels } from '@renderer/utils/resourcePresentation';
 import type { DiscoverSearch } from '@renderer/services/discoverNavigation';
+import { BreadCrumb } from '@renderer/components/BreadCrumb/BreadCrumb';
 
 export interface DescriptorBrowserProps {
   pluginId: string;
@@ -35,37 +35,7 @@ export function DescriptorBrowser({
 
   return (
     <Flex direction="column" gap="4" pt="4" aria-busy={browser.fetching || browser.opening}>
-      <Breadcrumbs.Root>
-        <Breadcrumbs.List>
-          {(browser.current || browser.openingEntry || browser.resourcePending) && (
-            <Breadcrumbs.Item>
-              <Breadcrumbs.Link asChild>
-                <button
-                  type="button"
-                  aria-label="Retour aux resultats"
-                  onClick={() => void browser.back(0)}
-                >
-                  <FolderRootIcon />
-                </button>
-              </Breadcrumbs.Link>
-            </Breadcrumbs.Item>
-          )}
-          {(browser.openingEntry ? browser.path : browser.path.slice(0, -1)).map(
-            (entity, index) => (
-              <Fragment key={`${entity.kind}:${entity.id}`}>
-                <Breadcrumbs.Separator />
-                <Breadcrumbs.Item>
-                  <Breadcrumbs.Link asChild>
-                    <button type="button" onClick={() => void browser.back(index + 1)}>
-                      {resourceTitle(entity)}
-                    </button>
-                  </Breadcrumbs.Link>
-                </Breadcrumbs.Item>
-              </Fragment>
-            )
-          )}
-        </Breadcrumbs.List>
-      </Breadcrumbs.Root>
+      <BreadCrumb browser={browser} />
       {browser.detailError && (
         <Text role="alert" color="red">
           {browser.detailError}

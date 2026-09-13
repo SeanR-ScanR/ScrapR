@@ -1,6 +1,6 @@
 import { Box, Tabs, Text } from '@radix-ui/themes';
 import type { ReactElement } from 'react';
-import { PageSection } from '@renderer/components/PageSection/PageSection';
+import { PageSection } from '@renderer/components/shared/PageSection/PageSection';
 import { DescriptorBrowser } from '@renderer/components/DescriptorBrowser/DescriptorBrowser';
 import { descriptorLabels } from '@renderer/utils/resourcePresentation';
 import type { SourceMetadata } from '@shared/pluginTypes';
@@ -21,7 +21,7 @@ export default function PageDiscover({
   const selected = descriptors.find(({ kind }) => kind === search.kind) ?? descriptors[0];
 
   return (
-    <PageSection title={`Parcourir: ${source.name}`}>
+    <PageSection title={`${source.name}`}>
       {descriptors.length ? (
         <Tabs.Root
           value={selected.kind}

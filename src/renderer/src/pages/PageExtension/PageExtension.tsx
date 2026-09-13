@@ -2,11 +2,11 @@ import { Badge, Flex, IconButton, Text } from '@radix-ui/themes';
 import { GlobeIcon, SearchIcon } from 'lucide-react';
 import { type ReactElement, useState } from 'react';
 import { Link } from '@tanstack/react-router';
-import { PageSection } from '@renderer/components/PageSection/PageSection';
-import * as PluginList from '@renderer/components/PluginList/PluginList';
-import { RequestState } from '@renderer/components/RequestState/RequestState';
-import * as SearchForm from '@renderer/components/SearchForm/SearchForm';
-import * as SourceList from '@renderer/components/SourceList/SourceList';
+import { PageSection } from '@renderer/components/shared/PageSection/PageSection';
+import * as PluginList from '@renderer/components/shared/PluginList/PluginList';
+import { RequestState } from '@renderer/components/shared/RequestState/RequestState';
+import * as SearchForm from '@renderer/components/shared/SearchForm/SearchForm';
+import * as SourceList from '@renderer/components/shared/SourceList/SourceList';
 import { usePlugins } from '@renderer/hooks/useRepository';
 
 export default function PageExtension(): ReactElement {

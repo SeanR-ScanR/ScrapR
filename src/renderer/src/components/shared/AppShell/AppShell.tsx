@@ -1,6 +1,6 @@
 import { Flex, type FlexProps } from '@radix-ui/themes';
 import type { ComponentPropsWithoutRef, ReactElement } from 'react';
-import AppTheme from '../AppTheme/AppTheme';
+import AppTheme from '@renderer/components/shared/AppTheme/AppTheme';
 import { titleBarBackground } from '@shared/windowTheme';
 import styles from './AppShell.module.css';
 

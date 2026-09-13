@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react';
 import { Outlet, useLocation } from '@tanstack/react-router';
-import * as AppShell from '@renderer/components/AppShell/AppShell';
+import * as AppShell from '@renderer/components/shared/AppShell/AppShell';
 import { SidebarNavigation } from '@renderer/components/SidebarNavigation/SidebarNavigation';
 import TopBar from '@renderer/components/TopBar/TopBar';
 

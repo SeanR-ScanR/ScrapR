@@ -2,9 +2,9 @@ import { createFileRoute, type ErrorComponentProps, Link, useRouter } from '@tan
 import { useEffect } from 'react';
 import { useQueryErrorResetBoundary, useSuspenseQuery } from '@tanstack/react-query';
 import PageDiscover from '@renderer/pages/PageDiscover/PageDiscover';
-import { PageSection } from '@renderer/components/PageSection/PageSection';
-import { RequestState } from '@renderer/components/RequestState/RequestState';
-import { LoadingState } from '@renderer/components/LoadingState/LoadingState';
+import { PageSection } from '@renderer/components/shared/PageSection/PageSection';
+import { RequestState } from '@renderer/components/shared/RequestState/RequestState';
+import { LoadingState } from '@renderer/components/shared/LoadingState/LoadingState';
 import { repositoryQueries } from '@renderer/services/ipcQueries';
 import { validateDiscoverSearch } from '@renderer/services/discoverNavigation';
 

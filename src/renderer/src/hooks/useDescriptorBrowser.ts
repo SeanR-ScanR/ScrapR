@@ -5,13 +5,7 @@ import { descriptorQueries } from '@renderer/services/ipcQueries';
 import { resourcePathQuery, type DiscoverSearch } from '@renderer/services/discoverNavigation';
 import type { AnyEntity, AnyPreview, DescriptorMetadata } from '@shared/pluginTypes';
 
-export function useDescriptorBrowser(
-  pluginId: string,
-  sourceId: string,
-  descriptor: DescriptorMetadata,
-  routeSearch: DiscoverSearch,
-  navigate: (search: DiscoverSearch) => void
-): {
+export type DescriptorBrowser = {
   query: string;
   entries: AnyPreview[];
   loading: boolean;
@@ -29,7 +23,15 @@ export function useDescriptorBrowser(
   search: (query: string) => void;
   open: (entry: AnyPreview) => Promise<void>;
   back: (depth: number) => void;
-} {
+};
+
+export function useDescriptorBrowser(
+  pluginId: string,
+  sourceId: string,
+  descriptor: DescriptorMetadata,
+  routeSearch: DiscoverSearch,
+  navigate: (search: DiscoverSearch) => void
+): DescriptorBrowser {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { kind } = descriptor;

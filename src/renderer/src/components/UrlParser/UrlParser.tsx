@@ -3,12 +3,12 @@ import { LinkIcon } from 'lucide-react';
 import { useEffect, useRef, useState, type ReactElement } from 'react';
 import { useNavigate, useRouter } from '@tanstack/react-router';
 import { useQueryClient } from '@tanstack/react-query';
-import * as UrlForm from '@renderer/components/UrlForm/UrlForm';
+import * as UrlForm from '@renderer/components/shared/UrlForm/UrlForm';
 import { descriptorQueries } from '@renderer/services/ipcQueries';
 import { resourcePathQuery } from '@renderer/services/discoverNavigation';
 import { descriptorLabels } from '@renderer/utils/resourcePresentation';
 import type { UrlDiscoveryResult } from '@shared/pluginTypes';
-import { LoadingState } from '@renderer/components/LoadingState/LoadingState';
+import { LoadingState } from '@renderer/components/shared/LoadingState/LoadingState';
 
 type Match = UrlDiscoveryResult['matches'][number];
 

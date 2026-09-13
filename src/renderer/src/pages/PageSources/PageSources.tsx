@@ -1,12 +1,12 @@
-import { Box, Flex, IconButton, Select, Text } from '@radix-ui/themes';
-import { GlobeIcon, SearchIcon } from 'lucide-react';
+import { Box, Flex, Select, Text } from '@radix-ui/themes';
+import { SearchIcon } from 'lucide-react';
 import { type ReactElement, useState } from 'react';
-import { PageSection } from '@renderer/components/PageSection/PageSection';
-import { RequestState } from '@renderer/components/RequestState/RequestState';
-import * as SearchForm from '@renderer/components/SearchForm/SearchForm';
-import * as SourceList from '@renderer/components/SourceList/SourceList';
+import { PageSection } from '@renderer/components/shared/PageSection/PageSection';
+import { RequestState } from '@renderer/components/shared/RequestState/RequestState';
+import * as SearchForm from '@renderer/components/shared/SearchForm/SearchForm';
+import * as SourceList from '@renderer/components/shared/SourceList/SourceList';
 import { usePlugins } from '@renderer/hooks/useRepository';
-import { Link } from '@tanstack/react-router';
+import SimpleLink from '@renderer/components/shared/SimpleLink/SimpleLink';
 
 export default function PageSources(): ReactElement {
   const { items: plugins, loading, fetching, hasData, error, retry } = usePlugins();
@@ -81,23 +81,22 @@ export default function PageSources(): ReactElement {
             <SourceList.Root>
               {filtered.map(({ pluginId, source }) => {
                 return (
-                  <SourceList.Item
+                  <SimpleLink
+                    to="/discover/$pluginId/$sourceId"
+                    params={{ pluginId, sourceId: source.id }}
+                    aria-label={`Parcourir ${source.name}`}
                     key={JSON.stringify([pluginId, source.id])}
-                    title={source.name}
-                    language={source.language}
                   >
-                    <SourceList.Actions aria-label={`Actions pour ${source.name}`}>
-                      <IconButton size="2" variant="soft" asChild>
-                        <Link
-                          to="/discover/$pluginId/$sourceId"
-                          params={{ pluginId, sourceId: source.id }}
-                          aria-label={`Parcourir ${source.name}`}
-                        >
-                          <GlobeIcon size={18} aria-hidden="true" />
-                        </Link>
-                      </IconButton>
-                    </SourceList.Actions>
-                  </SourceList.Item>
+                    <SourceList.Item
+                      key={JSON.stringify([pluginId, source.id])}
+                      title={source.name}
+                      language={source.language}
+                    >
+                      <SourceList.Actions
+                        aria-label={`Actions pour ${source.name}`}
+                      ></SourceList.Actions>
+                    </SourceList.Item>
+                  </SimpleLink>
                 );
               })}
             </SourceList.Root>

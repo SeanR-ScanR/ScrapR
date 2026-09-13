@@ -9,11 +9,11 @@ import type {
   ThumbnailSource
 } from '@shared/pluginTypes';
 import { DescriptorKindSchema, DescriptorPathSchema } from '@shared/pluginTypes';
-import * as ResourceDetails from '@renderer/components/ResourceDetails/ResourceDetails';
-import * as ResourceCard from '@renderer/components/ResourceCard/ResourceCard';
-import { PageSection } from '@renderer/components/PageSection/PageSection';
+import * as ResourceDetails from '@renderer/components/shared/ResourceDetails/ResourceDetails';
+import * as ResourceCard from '@renderer/components/shared/ResourceCard/ResourceCard';
+import { PageSection } from '@renderer/components/shared/PageSection/PageSection';
 import { ResourceGrid } from '@renderer/components/ResourceGrid/ResourceGrid';
-import { RequestState } from '@renderer/components/RequestState/RequestState';
+import { RequestState } from '@renderer/components/shared/RequestState/RequestState';
 import { useFavorites } from '@renderer/hooks/useFavorites';
 import { descriptorQueries } from '@renderer/services/ipcQueries';
 import { descriptorLabels, resourceTitle } from '@renderer/utils/resourcePresentation';
