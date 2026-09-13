@@ -1,10 +1,4 @@
-import {
-  createFileRoute,
-  type ErrorComponentProps,
-  Link,
-  useRouter,
-  useLocation
-} from '@tanstack/react-router';
+import { createFileRoute, type ErrorComponentProps, Link, useRouter } from '@tanstack/react-router';
 import { Text } from '@radix-ui/themes';
 import { useEffect } from 'react';
 import { useQueryErrorResetBoundary, useSuspenseQuery } from '@tanstack/react-query';
@@ -58,7 +52,6 @@ function ExploreRoute(): React.JSX.Element {
   const sourceQuery = useSuspenseQuery(repositoryQueries.getSource(pluginId, sourceId));
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
-  const location = useLocation();
   return (
     <RequestState
       loading={false}
@@ -69,7 +62,7 @@ function ExploreRoute(): React.JSX.Element {
       loadingLabel="Chargement de la source..."
     >
       <PageExplore
-        key={JSON.stringify([location.href, location.state.__TSR_key])}
+        key={JSON.stringify([pluginId, sourceId, search])}
         pluginId={pluginId}
         source={sourceQuery.data}
         search={search}
