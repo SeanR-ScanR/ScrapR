@@ -12,6 +12,7 @@ import { useDescriptorBrowser } from '@renderer/hooks/useDescriptorBrowser';
 import { descriptorLabels } from '@renderer/utils/resourcePresentation';
 import type { DiscoverSearch } from '@renderer/services/discoverNavigation';
 import { BreadCrumb } from '@renderer/components/BreadCrumb/BreadCrumb';
+import { BrowserRetry } from '@renderer/components/shared/BrowserRetry/BrowserRetry';
 
 export interface DescriptorBrowserProps {
   pluginId: string;
@@ -44,18 +45,16 @@ export function DescriptorBrowser({
       {browser.opening ? (
         <LoadingState label="Chargement de la ressource..." />
       ) : browser.resourcePending ? (
-        <Flex direction="column" gap="2">
-          {browser.detailError && (
-            <Button variant="soft" onClick={browser.retryResource} style={{ alignSelf: 'start' }}>
-              Reessayer
-            </Button>
-          )}
-          <Button variant="soft" onClick={() => browser.back(0)} style={{ alignSelf: 'start' }}>
-            Retour aux resultats
-          </Button>
-        </Flex>
+        <BrowserRetry browser={browser} />
       ) : browser.current ? (
         <>
+          <Button
+            variant="soft"
+            onClick={() => void browser.back(browser.path.length - 1)}
+            style={{ alignSelf: 'start' }}
+          >
+            Retour
+          </Button>
           <ResourceView
             source={{
               pluginId,
@@ -69,13 +68,6 @@ export function DescriptorBrowser({
             busy={browser.opening}
             onOpen={browser.open}
           />
-          <Button
-            variant="soft"
-            onClick={() => void browser.back(browser.path.length - 1)}
-            style={{ alignSelf: 'start' }}
-          >
-            Retour
-          </Button>
         </>
       ) : (
         <>
