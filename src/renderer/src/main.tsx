@@ -16,6 +16,7 @@ createRoot(document.getElementById('root')!).render(
       <RouterProvider router={router} />
       {import.meta.env.DEV && (
         <TanStackDevtools
+          config={{ triggerMode: 'fixed', position: 'bottom-right' }}
           plugins={[
             { name: 'TanStack Query', render: <ReactQueryDevtoolsPanel /> },
             { name: 'TanStack Router', render: <TanStackRouterDevtoolsPanel router={router} /> }
