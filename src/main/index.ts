@@ -4,6 +4,7 @@ import { electronApp, is, optimizer } from '@electron-toolkit/utils';
 import icon from '@shared/assets/icon.png?asset';
 import { registerSourceHandlers } from './ipc/source';
 import { registerPluginHandlers } from './ipc/plugin';
+import { registerThumbnailHandlers } from './ipc/thumbnail';
 import { titleBarBackground } from '@shared/windowTheme';
 
 function createWindow(): void {
@@ -65,6 +66,8 @@ app.whenReady().then(() => {
   registerPluginHandlers();
 
   registerSourceHandlers();
+
+  registerThumbnailHandlers();
 
   createWindow();
 

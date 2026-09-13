@@ -10,6 +10,8 @@ import {
   PluginMetadataSchema,
   PreviewSchemas,
   SourceMetadataSchema,
+  ThumbnailDataSchema,
+  ThumbnailMetadataSchema,
   UrlDiscoveryScopeSchema,
   UrlDiscoveryResultSchema
 } from './pluginTypes';
@@ -39,6 +41,21 @@ export const IpcContracts = {
   'plugin:list': contract(z.tuple([]), () => PluginMetadataSchema.array()),
   'plugin.source:list': contract(z.tuple([pluginId]), () => SourceMetadataSchema.array()),
   'plugin.source:get': contract(z.tuple([pluginId, sourceId]), () => SourceMetadataSchema),
+  'plugin.source.descriptor.thumbnail:load': contract(
+    z.tuple([
+      pluginId,
+      sourceId,
+      DescriptorPathSchema,
+      z.string(),
+      ThumbnailMetadataSchema,
+      z.number()
+    ]),
+    () => z.union([ThumbnailDataSchema, z.strictObject({ canceled: z.literal(true) })])
+  ),
+  'plugin.source.descriptor.thumbnail:cancel': contract(z.tuple([z.string()]), () => z.void()),
+  'plugin.source.descriptor.thumbnail:priority': contract(z.tuple([z.string(), z.number()]), () =>
+    z.void()
+  ),
   'plugin.source.descriptor:list': contract(z.tuple([pluginId, sourceId, ancestorPath]), () =>
     DescriptorMetadataSchema.array()
   ),

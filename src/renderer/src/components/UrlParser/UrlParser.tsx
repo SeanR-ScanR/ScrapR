@@ -5,7 +5,7 @@ import { useNavigate, useRouter } from '@tanstack/react-router';
 import { useQueryClient } from '@tanstack/react-query';
 import * as UrlForm from '@renderer/components/UrlForm/UrlForm';
 import { descriptorQueries } from '@renderer/services/ipcQueries';
-import { cacheParsedResource } from '@renderer/services/exploreNavigation';
+import { resourcePathQuery } from '@renderer/services/exploreNavigation';
 import { descriptorLabels } from '@renderer/utils/resourcePresentation';
 import type { UrlDiscoveryResult } from '@shared/pluginTypes';
 
@@ -49,11 +49,17 @@ export function UrlParser(): ReactElement {
         descriptorQueries.parseUrl(match.pluginId, match.sourceId, match.path, value)
       );
       if (request.current !== id) return;
-      const resource = cacheParsedResource(match.pluginId, match.sourceId, result);
+      const path = [...result.parents, result.entity];
+      const resource = path.map(({ kind, id }) => ({ kind, id }));
+      const origin = { url: value, path: match.path };
+      queryClient.setQueryData(
+        resourcePathQuery(queryClient, match.pluginId, match.sourceId, resource, origin).queryKey,
+        path
+      );
       await navigate({
         to: '/explore/$pluginId/$sourceId',
         params: { pluginId: match.pluginId, sourceId: match.sourceId },
-        search: { kind: result.parents[0]?.kind ?? result.entity.kind, resource }
+        search: { kind: resource[0].kind, resource, origin }
       });
       setInput((current) => (current.trim() === value ? '' : current));
       setOpen(false);

@@ -2,11 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from '@tanstack/react-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { descriptorQueries } from '@renderer/services/ipcQueries';
-import {
-  cacheResourcePath,
-  getResourcePath,
-  type ExploreSearch
-} from '@renderer/services/exploreNavigation';
+import { resourcePathQuery, type ExploreSearch } from '@renderer/services/exploreNavigation';
 import type { AnyEntity, AnyPreview, DescriptorMetadata } from '@shared/pluginTypes';
 
 export function useDescriptorBrowser(
@@ -27,7 +23,8 @@ export function useDescriptorBrowser(
   children: DescriptorMetadata[];
   opening: boolean;
   detailError: string;
-  expired: boolean;
+  resourcePending: boolean;
+  retryResource: () => void;
   search: (query: string) => void;
   open: (entry: AnyPreview) => Promise<void>;
   back: (depth: number) => void;
@@ -36,13 +33,13 @@ export function useDescriptorBrowser(
   const queryClient = useQueryClient();
   const { kind } = descriptor;
   const query = routeSearch.query ?? '';
-  const frames = routeSearch.resource
-    ? getResourcePath(pluginId, sourceId, routeSearch.resource)
-    : undefined;
-  const expired = !!routeSearch.resource && (!frames?.length || frames[0].entity.kind !== kind);
-  const path = expired ? [] : (frames ?? []).map((frame) => frame.entity);
+  const references = routeSearch.resource ?? [];
+  const pathQuery = useQuery({
+    ...resourcePathQuery(queryClient, pluginId, sourceId, references, routeSearch.origin),
+    enabled: references.length > 0
+  });
+  const path = references.length ? (pathQuery.data ?? []) : [];
   const current = path.at(-1);
-  const frame = expired ? undefined : frames?.at(-1);
   const canSearch = descriptor.operations.includes('search');
   const canSuggest = descriptor.operations.includes('suggestions');
   const searchQuery = useQuery({
@@ -60,8 +57,7 @@ export function useDescriptorBrowser(
       sourceId,
       path.map((entity) => entity.kind)
     ),
-    enabled: !!frame,
-    placeholderData: frame?.children
+    enabled: !!current
   });
   const [opening, setOpening] = useState(false);
   const [detailError, setDetailError] = useState('');
@@ -95,7 +91,7 @@ export function useDescriptorBrowser(
         descriptorQueries.get(pluginId, sourceId, path, entry.kind, entry.id)
       );
       if (id !== detailRequest.current) return;
-      const nextChildren = await queryClient.query(
+      await queryClient.query(
         descriptorQueries.list(
           pluginId,
           sourceId,
@@ -103,11 +99,12 @@ export function useDescriptorBrowser(
         )
       );
       if (id !== detailRequest.current) return;
-      const resource = cacheResourcePath(pluginId, sourceId, [
-        ...(frames ?? []),
-        { entity, children: nextChildren }
-      ]);
-      navigate({ kind, query: query || undefined, resource });
+      const resource = [...references, { kind: entry.kind, id: entry.id }];
+      queryClient.setQueryData(
+        resourcePathQuery(queryClient, pluginId, sourceId, resource, routeSearch.origin).queryKey,
+        [...path, entity]
+      );
+      navigate({ kind, query: query || undefined, resource, origin: routeSearch.origin });
     } catch (error) {
       if (id === detailRequest.current)
         setDetailError(error instanceof Error ? error.message : String(error));
@@ -117,11 +114,12 @@ export function useDescriptorBrowser(
   }
 
   function back(depth: number): void {
-    const sliced = (frames ?? []).slice(0, Math.max(0, depth));
+    const sliced = references.slice(0, Math.max(0, depth));
     navigate({
       kind,
       query: query || undefined,
-      resource: sliced.length ? cacheResourcePath(pluginId, sourceId, sliced) : undefined
+      resource: sliced.length ? sliced : undefined,
+      origin: sliced.length ? routeSearch.origin : undefined
     });
   }
 
@@ -134,12 +132,19 @@ export function useDescriptorBrowser(
     error: entriesQuery.isLoading ? '' : (entriesQuery.error?.message ?? ''),
     path,
     current,
-    children: frame ? (childrenQuery.data ?? frame.children ?? []) : [],
-    opening: opening || (!!frame && childrenQuery.isLoading),
+    children: current ? (childrenQuery.data ?? []) : [],
+    opening:
+      opening ||
+      (references.length > 0 && pathQuery.isFetching) ||
+      (!!current && childrenQuery.isLoading),
     detailError:
       detailError ||
-      (frame && !childrenQuery.isLoading ? (childrenQuery.error?.message ?? '') : ''),
-    expired,
+      (references.length ? (pathQuery.error?.message ?? '') : '') ||
+      (current && !childrenQuery.isLoading ? (childrenQuery.error?.message ?? '') : ''),
+    resourcePending: references.length > 0 && !current,
+    retryResource: () => {
+      void pathQuery.refetch();
+    },
     search,
     open,
     back

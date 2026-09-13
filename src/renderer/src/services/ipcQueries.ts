@@ -1,9 +1,14 @@
-import { queryOptions } from '@tanstack/react-query';
+import { hashKey, queryOptions } from '@tanstack/react-query';
+import { sha256 } from '@noble/hashes/sha2.js';
+import { bytesToHex } from '@noble/hashes/utils.js';
 import type { AnyEntity, DescriptorKind } from '@shared/pluginTypes';
 import { descriptorClient } from './descriptorClient';
 import { repositoryClient } from './repositoryClient';
 
-// Include every IPC argument: plugins can use the full parent entities as context.
+function parentContextKey(parents: readonly AnyEntity[]): string {
+  return bytesToHex(sha256(new TextEncoder().encode(hashKey(parents))));
+}
+
 export const repositoryQueries = {
   listPlugins: () =>
     queryOptions({
@@ -57,7 +62,7 @@ export const descriptorQueries = {
         'plugin.source.descriptor.resource:search',
         pluginId,
         sourceId,
-        parents,
+        parentContextKey(parents),
         kind,
         query
       ] as const,
@@ -76,7 +81,7 @@ export const descriptorQueries = {
         'plugin.source.descriptor.resource:get',
         pluginId,
         sourceId,
-        parents,
+        parentContextKey(parents),
         kind,
         id
       ] as const,

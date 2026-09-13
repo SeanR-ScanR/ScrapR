@@ -1,31 +1,25 @@
-import { AspectRatio, Card, Flex, Inset, Text } from '@radix-ui/themes';
-import { ImageOffIcon } from 'lucide-react';
 import type { ReactElement } from 'react';
+import * as ResourceCard from '@renderer/components/ResourceCard/ResourceCard';
+import type { Thumbnail, ThumbnailSource } from '@shared/pluginTypes';
 
 type FavoriteCardProps = {
   title: string;
+  thumbnail?: Thumbnail;
+  source?: ThumbnailSource;
 };
 
-export function FavoriteCard({ title }: FavoriteCardProps): ReactElement {
+export function FavoriteCard({ title, thumbnail, source }: FavoriteCardProps): ReactElement {
   return (
-    <Card asChild size="1">
+    <ResourceCard.Root asChild size="1">
       <li>
-        <Inset clip="padding-box" side="top" mb="3">
-          <AspectRatio ratio={3 / 4}>
-            <Flex
-              align="center"
-              justify="center"
-              height="100%"
-              style={{ background: 'var(--gray-4)', color: 'var(--gray-9)' }}
-            >
-              <ImageOffIcon size={24} aria-hidden="true" />
-            </Flex>
-          </AspectRatio>
-        </Inset>
-        <Text as="p" size="2" weight="medium" align="center">
+        <ResourceCard.Thumbnail>
+          <ResourceCard.ThumbnailImage image={thumbnail} source={source} />
+          <ResourceCard.ThumbnailFallback />
+        </ResourceCard.Thumbnail>
+        <ResourceCard.Title size="2" align="center" style={{ overflowWrap: 'anywhere' }}>
           {title}
-        </Text>
+        </ResourceCard.Title>
       </li>
-    </Card>
+    </ResourceCard.Root>
   );
 }

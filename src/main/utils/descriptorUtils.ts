@@ -29,7 +29,7 @@ import {
 } from '@shared/pluginTypes';
 
 interface DescriptorTree extends Partial<Record<DescriptorKind, DescriptorTree>> {
-  _do?: Partial<Record<DescriptorOperation, unknown>>;
+  _do?: Partial<Record<DescriptorOperation, unknown>> & Pick<ContextOperations, 'loadThumbnail'>;
 }
 
 type ContextOperations = DescriptorOf<DescriptorKind, DescriptorKind[]>['_do'];
@@ -113,19 +113,19 @@ function resolveOperationContext(
   inputKind: DescriptorKind
 ): {
   kind: DescriptorKind;
-  parentPath: DescriptorKind[];
   context: Parameters<NonNullable<ContextOperations['get']>>[0];
   node: DescriptorTree;
 } {
   const parents = parentsSchema.parse(inputParents);
   const kind = DescriptorKindSchema.parse(inputKind);
   const parentPath = getParentPath(parents);
-  const node = resolveDescriptor(source, DescriptorPathSchema.parse([...parentPath, kind]));
+  const path = DescriptorPathSchema.parse([...parentPath, kind]);
+  const node = resolveDescriptor(source, path);
   const context = createContextSchema(parentPath).parse({
     _parents: parents,
     ...Object.fromEntries(parents.map((parent) => [parent.kind, parent]))
   });
-  return { kind, parentPath, context, node };
+  return { kind, context, node };
 }
 
 export function searchDescriptor<K extends DescriptorKind>(

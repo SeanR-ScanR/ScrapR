@@ -1,66 +1,80 @@
 import {
   DescriptorKindSchema,
+  DescriptorPathSchema,
   type AnyEntity,
   type DescriptorKind,
-  type DescriptorMetadata,
-  type UrlParseResult
+  type DescriptorPath
 } from '@shared/pluginTypes';
+import { queryOptions, type QueryClient } from '@tanstack/react-query';
+import { z } from 'zod';
+import { descriptorQueries } from './ipcQueries';
+
+const resourceReferenceSchema = z.strictObject({ kind: DescriptorKindSchema, id: z.string() });
+export type ResourceReference = z.infer<typeof resourceReferenceSchema>;
+
+const originSchema = z.strictObject({
+  url: z.url({ protocol: /^https?$/ }),
+  path: DescriptorPathSchema
+});
 
 export interface ExploreSearch {
   kind?: DescriptorKind;
   query?: string;
-  resource?: string;
+  resource?: ResourceReference[];
+  origin?: { url: string; path: DescriptorPath };
 }
 
 export function validateExploreSearch(search: Record<string, unknown>): ExploreSearch {
   const kind = DescriptorKindSchema.safeParse(search.kind);
+  const resource =
+    search.resource === undefined
+      ? undefined
+      : resourceReferenceSchema.array().nonempty().parse(search.resource);
+  if (resource) DescriptorPathSchema.parse(resource.map((entry) => entry.kind));
+  if (resource && kind.success && resource[0].kind !== kind.data) {
+    throw new Error('The resource path does not match the selected descriptor.');
+  }
   return {
-    ...(kind.success ? { kind: kind.data } : {}),
+    ...(resource ? { kind: resource[0].kind } : kind.success ? { kind: kind.data } : {}),
     ...(typeof search.query === 'string' && search.query ? { query: search.query } : {}),
-    ...(typeof search.resource === 'string' && search.resource ? { resource: search.resource } : {})
+    ...(resource ? { resource } : {}),
+    ...(resource && search.origin !== undefined
+      ? { origin: originSchema.parse(search.origin) }
+      : {})
   };
 }
 
-export interface ResourceFrame {
-  entity: AnyEntity;
-  children?: DescriptorMetadata[];
-}
-
-// Session snapshots deliberately keep entities (including page data) out of URLs.
-const resources = new Map<
-  string,
-  { pluginId: string; sourceId: string; frames: ResourceFrame[] }
->();
-
-export function cacheResourcePath(
+export function resourcePathQuery(
+  queryClient: QueryClient,
   pluginId: string,
   sourceId: string,
-  frames: ResourceFrame[]
-): string {
-  const token = crypto.randomUUID();
-  resources.set(token, { pluginId, sourceId, frames: structuredClone(frames) });
-  return token;
-}
-
-export function cacheParsedResource(
-  pluginId: string,
-  sourceId: string,
-  result: UrlParseResult
-): string {
-  return cacheResourcePath(
-    pluginId,
-    sourceId,
-    [...result.parents, result.entity].map((entity) => ({ entity }))
-  );
-}
-
-export function getResourcePath(
-  pluginId: string,
-  sourceId: string,
-  token: string
-): ResourceFrame[] | undefined {
-  const snapshot = resources.get(token);
-  return snapshot?.pluginId === pluginId && snapshot.sourceId === sourceId
-    ? snapshot.frames
-    : undefined;
+  references: readonly ResourceReference[],
+  origin?: ExploreSearch['origin']
+) {
+  return queryOptions({
+    queryKey: ['resource-path', pluginId, sourceId, references, origin] as const,
+    queryFn: async ({ signal }): Promise<AnyEntity[]> => {
+      const parents: AnyEntity[] = [];
+      if (origin) {
+        const parsed = await queryClient.query(
+          descriptorQueries.parseUrl(pluginId, sourceId, origin.path, origin.url)
+        );
+        signal.throwIfAborted();
+        for (const entity of [...parsed.parents, parsed.entity]) {
+          const reference = references[parents.length];
+          if (reference?.kind !== entity.kind || reference.id !== entity.id) break;
+          parents.push(entity);
+        }
+      }
+      for (const reference of references.slice(parents.length)) {
+        signal.throwIfAborted();
+        const entity = await queryClient.query(
+          descriptorQueries.get(pluginId, sourceId, [...parents], reference.kind, reference.id)
+        );
+        signal.throwIfAborted();
+        parents.push(entity);
+      }
+      return parents;
+    }
+  });
 }

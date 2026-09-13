@@ -1,13 +1,19 @@
 import { Text } from '@radix-ui/themes';
 import type { ReactElement } from 'react';
-import type { AnyEntity, AnyPreview, DescriptorMetadata } from '@shared/pluginTypes';
-import { DescriptorKindSchema } from '@shared/pluginTypes';
+import type {
+  AnyEntity,
+  AnyPreview,
+  DescriptorMetadata,
+  ThumbnailSource
+} from '@shared/pluginTypes';
+import { DescriptorKindSchema, DescriptorPathSchema } from '@shared/pluginTypes';
 import * as ResourceDetails from '@renderer/components/ResourceDetails/ResourceDetails';
 import { PageSection } from '@renderer/components/PageSection/PageSection';
 import { ResourceGrid } from '@renderer/components/ResourceGrid/ResourceGrid';
 import { descriptorLabels, resourceTitle } from '@renderer/utils/resourcePresentation';
 
 export interface ResourceViewProps {
+  source: ThumbnailSource;
   resource: AnyEntity;
   descriptors: DescriptorMetadata[];
   busy?: boolean;
@@ -15,6 +21,7 @@ export interface ResourceViewProps {
 }
 
 export function ResourceView({
+  source,
   resource,
   descriptors,
   busy,
@@ -42,6 +49,7 @@ export function ResourceView({
               <PageSection key={kind} title={descriptorLabels[kind]}>
                 {entries.length ? (
                   <ResourceGrid
+                    source={{ ...source, path: DescriptorPathSchema.parse([...source.path, kind]) }}
                     entries={entries}
                     canOpen={descriptors.some(
                       (descriptor) =>
@@ -52,7 +60,8 @@ export function ResourceView({
                   />
                 ) : (
                   <Text color="gray">
-                    Aucune ressource disponible dans la catégorie "{descriptorLabels[kind]}".
+                    Aucune ressource disponible dans la catégorie &quot;{descriptorLabels[kind]}
+                    &quot;.
                   </Text>
                 )}
               </PageSection>

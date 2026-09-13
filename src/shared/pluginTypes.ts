@@ -12,7 +12,41 @@ export const Descriptors = {
 export const DescriptorKindSchema = z.enum(Descriptors);
 export type DescriptorKind = z.infer<typeof DescriptorKindSchema>;
 
-const titledPreviewShape = { id: z.string(), title: z.string() };
+export const ThumbnailMetadataSchema = z.strictObject({
+  key: z.string().min(1),
+  payload: z.any()
+});
+export type ThumbnailMetadata = z.infer<typeof ThumbnailMetadataSchema>;
+
+export const ThumbnailSchema = z.union([
+  ThumbnailMetadataSchema,
+  z.url({ protocol: /^data$/ }).refine((value) => /^data:image\//i.test(value), {
+    message: 'Thumbnail data URI must contain an image'
+  })
+]);
+export type Thumbnail = z.infer<typeof ThumbnailSchema>;
+
+export const ThumbnailDataSchema = z.object({
+  bytes: z.instanceof(Uint8Array),
+  contentType: z.string().regex(/^image\//i)
+});
+export type ThumbnailData = z.infer<typeof ThumbnailDataSchema>;
+export type ThumbnailSource = { pluginId: string; sourceId: string; path: DescriptorPath };
+
+export class ThumbnailPriority extends EventTarget {
+  constructor(public value: number) {
+    super();
+  }
+
+  update(value: number): void {
+    if (this.value === value) return;
+    this.value = value;
+    this.dispatchEvent(new Event('change'));
+  }
+}
+
+const previewShape = { id: z.string(), thumbnail: ThumbnailSchema.optional() };
+const titledPreviewShape = { ...previewShape, title: z.string() };
 const descriptionShape = { description: z.string() };
 const descriptorDefinitions = {
   [Descriptors.MAGAZINE]: {
@@ -28,8 +62,8 @@ const descriptorDefinitions = {
   [Descriptors.SERIES]: { preview: titledPreviewShape, entity: descriptionShape, terminal: false },
   [Descriptors.CHAPTER]: { preview: titledPreviewShape, entity: descriptionShape, terminal: false },
   [Descriptors.PAGE]: {
-    preview: { id: z.string() },
-    entity: { dataUri: z.string() },
+    preview: previewShape,
+    entity: { dataUri: z.url() },
     terminal: true
   }
 } as const satisfies Record<
@@ -38,9 +72,7 @@ const descriptorDefinitions = {
 >;
 
 type DescriptorDefinitions = typeof descriptorDefinitions;
-type TerminalKind = {
-  [K in DescriptorKind]: DescriptorDefinitions[K]['terminal'] extends true ? K : never;
-}[DescriptorKind];
+type TerminalKind = typeof Descriptors.PAGE;
 
 function mapDescriptorSchemas<Schemas extends Record<DescriptorKind, z.ZodType>>(
   create: (kind: DescriptorKind) => z.ZodType
@@ -124,9 +156,8 @@ const AncestorPathSchema = DescriptorKindSchema.array().superRefine((path, ctx) 
   });
 });
 
-export const DescriptorPathSchema = AncestorPathSchema.nonempty().transform(
-  (path): DescriptorPath => path as DescriptorPath
-);
+export const DescriptorPathSchema: z.ZodType<DescriptorPath, DescriptorKind[]> =
+  AncestorPathSchema.nonempty().transform((path): DescriptorPath => path as DescriptorPath);
 
 function getChildKinds(kind: DescriptorKind, path: readonly DescriptorKind[]): DescriptorKind[] {
   return descriptorDefinitions[kind].terminal
@@ -280,6 +311,15 @@ function createDescriptorOpsSchema<
   const entity = createEntitySchema(kind, path);
   const previews = PreviewSchemas[kind].array();
   const operations = {
+    loadThumbnail: z
+      .function({
+        input: [
+          z.any(),
+          z.object({ signal: z.instanceof(AbortSignal), priority: z.instanceof(ThumbnailPriority) })
+        ],
+        output: z.promise(ThumbnailDataSchema)
+      })
+      .optional(),
     canParseUrl: z
       .function({ input: [z.instanceof(URL)], output: z.promise(z.boolean()) })
       .optional(),
@@ -340,6 +380,7 @@ export type DescriptorOf<
   Kind extends DescriptorKind = DescriptorKind,
   Path extends readonly DescriptorKind[] = []
 > = z.infer<DescriptorSchema<Kind, Path>>;
+
 export const DescriptorSchemas = mapDescriptorSchemas<{
   [K in DescriptorKind]: DescriptorSchema<K, []>;
 }>((kind) => createDescriptorSchema(kind));

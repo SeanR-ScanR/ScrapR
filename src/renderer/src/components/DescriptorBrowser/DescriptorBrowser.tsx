@@ -2,6 +2,7 @@ import { Button, Flex, Heading, Text } from '@radix-ui/themes';
 import { SearchIcon } from 'lucide-react';
 import { Fragment, type ReactElement, type ReactNode, useState } from 'react';
 import type { DescriptorMetadata, SourceMetadata } from '@shared/pluginTypes';
+import { DescriptorPathSchema, getParentPath } from '@shared/pluginTypes';
 import * as Breadcrumbs from '@renderer/components/Breadcrumbs/Breadcrumbs';
 import * as SearchForm from '@renderer/components/SearchForm/SearchForm';
 import { RequestState } from '@renderer/components/RequestState/RequestState';
@@ -81,12 +82,13 @@ export function DescriptorBrowser({
           {browser.detailError}
         </Text>
       )}
-      {browser.expired ? (
+      {browser.resourcePending ? (
         <Flex direction="column" gap="2">
-          <Text role="alert">
-            Cette ressource a expiré ou n’est plus disponible dans cette session. Ouvrez son URL à
-            nouveau ou revenez aux resultats.
-          </Text>
+          {browser.detailError && (
+            <Button variant="soft" onClick={browser.retryResource} style={{ alignSelf: 'start' }}>
+              Reessayer
+            </Button>
+          )}
           <Button variant="soft" onClick={() => browser.back(0)} style={{ alignSelf: 'start' }}>
             Retour aux resultats
           </Button>
@@ -94,6 +96,11 @@ export function DescriptorBrowser({
       ) : browser.current ? (
         <>
           <ResourceView
+            source={{
+              pluginId,
+              sourceId: source.id,
+              path: DescriptorPathSchema.parse(getParentPath(browser.path))
+            }}
             resource={browser.current}
             descriptors={browser.children}
             busy={browser.opening}
@@ -154,6 +161,7 @@ export function DescriptorBrowser({
           >
             {browser.entries.length ? (
               <ResourceGrid
+                source={{ pluginId, sourceId: source.id, path: [descriptor.kind] }}
                 entries={browser.entries}
                 canOpen={descriptor.operations.includes('get')}
                 busy={browser.opening}
