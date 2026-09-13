@@ -5,6 +5,8 @@ import { DescriptorBrowser } from '@renderer/components/DescriptorBrowser/Descri
 import { descriptorLabels } from '@renderer/utils/resourcePresentation';
 import type { SourceMetadata } from '@shared/pluginTypes';
 import type { DiscoverSearch } from '@renderer/services/discoverNavigation';
+import { BreadCrumb } from '@renderer/components/BreadCrumb/BreadCrumb';
+import { useDescriptorBrowser } from '@renderer/hooks/useDescriptorBrowser';
 
 export default function PageDiscover({
   pluginId,
@@ -19,9 +21,16 @@ export default function PageDiscover({
 }): ReactElement {
   const { descriptors } = source;
   const selected = descriptors.find(({ kind }) => kind === search.kind) ?? descriptors[0];
-
+  const browser = useDescriptorBrowser(
+    pluginId,
+    source.id,
+    { kind: 'magazine', operations: [] },
+    search,
+    navigate
+  );
   return (
     <PageSection title={`${source.name}`}>
+      <BreadCrumb browser={browser} />
       {descriptors.length ? (
         <Tabs.Root
           value={selected.kind}

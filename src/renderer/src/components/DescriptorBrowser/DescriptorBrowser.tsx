@@ -11,7 +11,6 @@ import { ResourceView } from '@renderer/components/ResourceView/ResourceView';
 import { useDescriptorBrowser } from '@renderer/hooks/useDescriptorBrowser';
 import { descriptorLabels } from '@renderer/utils/resourcePresentation';
 import type { DiscoverSearch } from '@renderer/services/discoverNavigation';
-import { BreadCrumb } from '@renderer/components/BreadCrumb/BreadCrumb';
 import { BrowserRetry } from '@renderer/components/shared/BrowserRetry/BrowserRetry';
 
 export interface DescriptorBrowserProps {
@@ -36,7 +35,6 @@ export function DescriptorBrowser({
 
   return (
     <Flex direction="column" gap="4" pt="4" aria-busy={browser.fetching || browser.opening}>
-      <BreadCrumb browser={browser} />
       {browser.detailError && (
         <Text role="alert" color="red">
           {browser.detailError}
