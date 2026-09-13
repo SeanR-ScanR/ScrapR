@@ -43,7 +43,7 @@ export function Thumbnail({ ratio = 3 / 4, style, ref, ...props }: ThumbnailProp
   const composedRef = useComposedRefs(ref, setElement);
   return (
     <ThumbnailElementContext value={element}>
-      <Inset clip="padding-box" side="top" mb="3">
+      <Inset className="resource-card-thumbnail" clip="padding-box" side="top" mb="3">
         <AspectRatio ratio={ratio}>
           <Avatar.Root
             ref={composedRef}

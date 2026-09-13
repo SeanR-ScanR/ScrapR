@@ -1,4 +1,5 @@
-import { Text } from '@radix-ui/themes';
+import { Box, Flex, Text } from '@radix-ui/themes';
+import { useQuery } from '@tanstack/react-query';
 import type { ReactElement } from 'react';
 import type { FavoriteInput } from '@shared/favoriteTypes';
 import type {
@@ -9,8 +10,12 @@ import type {
 } from '@shared/pluginTypes';
 import { DescriptorKindSchema, DescriptorPathSchema } from '@shared/pluginTypes';
 import * as ResourceDetails from '@renderer/components/ResourceDetails/ResourceDetails';
+import * as ResourceCard from '@renderer/components/ResourceCard/ResourceCard';
 import { PageSection } from '@renderer/components/PageSection/PageSection';
 import { ResourceGrid } from '@renderer/components/ResourceGrid/ResourceGrid';
+import { RequestState } from '@renderer/components/RequestState/RequestState';
+import { useFavorites } from '@renderer/hooks/useFavorites';
+import { descriptorQueries } from '@renderer/services/ipcQueries';
 import { descriptorLabels, resourceTitle } from '@renderer/utils/resourcePresentation';
 
 export interface ResourceViewProps {
@@ -32,19 +37,85 @@ export function ResourceView({
   busy,
   onOpen
 }: ResourceViewProps): ReactElement {
+  const favorites = useFavorites();
+  const capabilities = useQuery(
+    descriptorQueries.capabilities(source.pluginId, source.sourceId, source.path)
+  );
+  const identity = {
+    pluginId: source.pluginId,
+    sourceId: source.sourceId,
+    resource: resourcePath.map(({ kind, id }) => ({ kind, id }))
+  };
+  const favorite = favorites.has(identity);
+  const pending = favorites.isPending(identity);
+  const title = resourceTitle(resource);
+
   return (
     <ResourceDetails.Root>
-      <ResourceDetails.Title>{resourceTitle(resource)}</ResourceDetails.Title>
-      {'date' in resource && (
-        <ResourceDetails.Metadata>
-          <Text>{resource.date}</Text>
-        </ResourceDetails.Metadata>
+      <Flex direction={{ initial: 'column', sm: 'row' }} align="start" gap="4">
+        <Box width="100%" maxWidth="240px" flexShrink="0">
+          <ResourceCard.Root>
+            <ResourceCard.Thumbnail>
+              <ResourceCard.ThumbnailImage image={resource.thumbnail} source={source} alt={title} />
+              <ResourceCard.ThumbnailFallback />
+            </ResourceCard.Thumbnail>
+          </ResourceCard.Root>
+        </Box>
+        <Flex direction="column" gap="3" style={{ minWidth: 0, overflowWrap: 'anywhere' }}>
+          <Flex align="start" gap="3">
+            <ResourceDetails.Title>{title}</ResourceDetails.Title>
+            {(favorite || capabilities.data?.includes('get')) && (
+              <ResourceCard.FavoriteAction
+                favorite={favorite}
+                loading={pending}
+                disabled={favorites.disabled}
+                style={{ flexShrink: 0 }}
+                onFavoriteChange={(favorite) =>
+                  favorites.change(
+                    favorite
+                      ? {
+                          favorite,
+                          resource: {
+                            pluginId: source.pluginId,
+                            sourceId: source.sourceId,
+                            parents: resourcePath.slice(0, -1),
+                            kind: resource.kind,
+                            id: resource.id,
+                            origin
+                          }
+                        }
+                      : { favorite, resource: identity }
+                  )
+                }
+              />
+            )}
+          </Flex>
+          {'date' in resource && (
+            <ResourceDetails.Metadata>
+              <Text>{resource.date}</Text>
+            </ResourceDetails.Metadata>
+          )}
+          {'description' in resource && resource.description && (
+            <ResourceDetails.Description>{resource.description}</ResourceDetails.Description>
+          )}
+        </Flex>
+      </Flex>
+      {favorites.error && (
+        <RequestState loading={false} error={favorites.error} onRetry={favorites.retry}>
+          {null}
+        </RequestState>
       )}
-      {'description' in resource && (
-        <ResourceDetails.Description>{resource.description}</ResourceDetails.Description>
+      {capabilities.isError && (
+        <RequestState
+          loading={false}
+          error={capabilities.error.message}
+          onRetry={() => void capabilities.refetch()}
+        >
+          {null}
+        </RequestState>
       )}
       {resource.kind === 'page' ? (
-        <ResourceDetails.Image src={resource.dataUri} alt={resourceTitle(resource)} />
+        <ResourceDetails.Image src={resource.dataUri} alt={title} />
       ) : (
         <>
           {DescriptorKindSchema.options.map((kind) => {

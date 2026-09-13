@@ -4,6 +4,12 @@
   min-width: 0;
 }
 
+.resource-card > .resource-card-thumbnail:last-child {
+  margin-bottom: calc(-1 * var(--inset-padding-bottom-calc));
+  border-bottom-left-radius: var(--inset-border-radius-calc);
+  border-bottom-right-radius: var(--inset-border-radius-calc);
+}
+
 .resource-card-title,
 .resource-card-description {
   display: -webkit-box;
@@ -64,7 +70,7 @@
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .resource-card-favorite[aria-pressed='false']:not([aria-busy='true']) {
+  :where(.resource-card) .resource-card-favorite[aria-pressed='false']:not([aria-busy='true']) {
     opacity: 0;
     pointer-events: none;
   }
