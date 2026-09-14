@@ -1,0 +1,24 @@
+.button {
+  text-decoration: none;
+  color: inherit;
+  background-color: inherit;
+  border: none;
+  font-size: 1.2em;
+  cursor: pointer;
+  padding-left: 0.2em;
+  padding-right: 0.2em;
+  margin: 0;
+}
+
+.button:hover {
+  background-color: grey;
+}
+
+.button_current {
+  font-weight: bold;
+}
+
+.separator {
+  margin-left: 0;
+  margin-right: 0;
+}
