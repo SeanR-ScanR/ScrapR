@@ -3,9 +3,14 @@ import { useRouter } from '@tanstack/react-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { descriptorQueries } from '@renderer/services/ipcQueries';
 import { resourcePathQuery, type DiscoverSearch } from '@renderer/services/discoverNavigation';
-import type { AnyEntity, AnyPreview, DescriptorMetadata } from '@shared/pluginTypes';
+import type {
+  AnyEntity,
+  AnyPreview,
+  DescriptorMetadata,
+  SourceMetadata
+} from '@shared/pluginTypes';
 
-export type DescriptorBrowser = {
+export type DescriptorBrowserEntity = {
   query: string;
   entries: AnyPreview[];
   loading: boolean;
@@ -19,45 +24,54 @@ export type DescriptorBrowser = {
   openingEntry: AnyPreview | null;
   detailError: string;
   resourcePending: boolean;
+  descriptorProps: DescriptorBrowserProps;
   retryResource: () => void;
   search: (query: string) => void;
   open: (entry: AnyPreview) => Promise<void>;
   back: (depth: number) => void;
 };
 
-export function useDescriptorBrowser(
-  pluginId: string,
-  sourceId: string,
-  descriptor: DescriptorMetadata,
-  routeSearch: DiscoverSearch,
-  navigate: (search: DiscoverSearch) => void
-): DescriptorBrowser {
+export interface DescriptorBrowserProps {
+  pluginId: string;
+  source: SourceMetadata;
+  descriptor: DescriptorMetadata;
+  search: DiscoverSearch;
+  navigate: (search: DiscoverSearch) => void;
+}
+
+export function useDescriptorBrowser(props: DescriptorBrowserProps): DescriptorBrowserEntity {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { kind } = descriptor;
-  const query = routeSearch.query ?? '';
-  const references = routeSearch.resource ?? [];
+  const { kind } = props.descriptor;
+  const query = props.search.query ?? '';
+  const references = props.search.resource ?? [];
   const pathQuery = useQuery({
-    ...resourcePathQuery(queryClient, pluginId, sourceId, references, routeSearch.origin),
+    ...resourcePathQuery(
+      queryClient,
+      props.pluginId,
+      props.source.id,
+      references,
+      props.search.origin
+    ),
     enabled: references.length > 0
   });
   const path = references.length ? (pathQuery.data ?? []) : [];
   const current = path.at(-1);
-  const canSearch = descriptor.operations.includes('search');
-  const canSuggest = descriptor.operations.includes('suggestions');
+  const canSearch = props.descriptor.operations.includes('search');
+  const canSuggest = props.descriptor.operations.includes('suggestions');
   const searchQuery = useQuery({
-    ...descriptorQueries.search(pluginId, sourceId, [], kind, query),
-    enabled: !routeSearch.resource && !!query && canSearch
+    ...descriptorQueries.search(props.pluginId, props.source.id, [], kind, query),
+    enabled: !props.search.resource && !!query && canSearch
   });
   const suggestionsQuery = useQuery({
-    ...descriptorQueries.suggestions(pluginId, sourceId, kind),
-    enabled: !routeSearch.resource && !query && canSuggest
+    ...descriptorQueries.suggestions(props.pluginId, props.source.id, kind),
+    enabled: !props.search.resource && !query && canSuggest
   });
   const entriesQuery = query ? searchQuery : suggestionsQuery;
   const childrenQuery = useQuery({
     ...descriptorQueries.list(
-      pluginId,
-      sourceId,
+      props.pluginId,
+      props.source.id,
       path.map((entity) => entity.kind)
     ),
     enabled: !!current
@@ -78,10 +92,10 @@ export function useDescriptorBrowser(
   }, [router]);
 
   function search(nextQuery: string): void {
-    if (!routeSearch.resource && nextQuery === query) {
+    if (!props.search.resource && nextQuery === query) {
       if (query ? canSearch : canSuggest) void entriesQuery.refetch();
     } else {
-      navigate({ kind, query: nextQuery || undefined });
+      props.navigate({ kind, query: nextQuery || undefined });
     }
   }
 
@@ -91,23 +105,34 @@ export function useDescriptorBrowser(
     setDetailError('');
     try {
       const entity = await queryClient.query(
-        descriptorQueries.get(pluginId, sourceId, path, entry.kind, entry.id)
+        descriptorQueries.get(props.pluginId, props.source.id, path, entry.kind, entry.id)
       );
       if (id !== detailRequest.current) return;
       await queryClient.query(
         descriptorQueries.list(
-          pluginId,
-          sourceId,
+          props.pluginId,
+          props.source.id,
           [...path, entity].map((parent) => parent.kind)
         )
       );
       if (id !== detailRequest.current) return;
       const resource = [...references, { kind: entry.kind, id: entry.id }];
       queryClient.setQueryData(
-        resourcePathQuery(queryClient, pluginId, sourceId, resource, routeSearch.origin).queryKey,
+        resourcePathQuery(
+          queryClient,
+          props.pluginId,
+          props.source.id,
+          resource,
+          props.search.origin
+        ).queryKey,
         [...path, entity]
       );
-      navigate({ kind, query: query || undefined, resource, origin: routeSearch.origin });
+      props.navigate({
+        kind,
+        query: query || undefined,
+        resource,
+        origin: props.search.origin
+      });
     } catch (error) {
       if (id === detailRequest.current)
         setDetailError(error instanceof Error ? error.message : String(error));
@@ -121,11 +146,11 @@ export function useDescriptorBrowser(
     setOpeningEntry(null);
     setDetailError('');
     const sliced = references.slice(0, Math.max(0, depth));
-    navigate({
+    props.navigate({
       kind,
       query: query || undefined,
       resource: sliced.length ? sliced : undefined,
-      origin: sliced.length ? routeSearch.origin : undefined
+      origin: sliced.length ? props.search.origin : undefined
     });
   }
 
@@ -149,6 +174,7 @@ export function useDescriptorBrowser(
       (references.length ? (pathQuery.error?.message ?? '') : '') ||
       (current && !childrenQuery.isLoading ? (childrenQuery.error?.message ?? '') : ''),
     resourcePending: references.length > 0 && !current,
+    descriptorProps: props,
     retryResource: () => {
       void pathQuery.refetch();
     },

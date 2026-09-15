@@ -1,42 +1,23 @@
 import { Button, Flex, Heading, Text } from '@radix-ui/themes';
 import { SearchIcon } from 'lucide-react';
 import { type ReactElement, useState } from 'react';
-import type { DescriptorMetadata, SourceMetadata } from '@shared/pluginTypes';
 import { DescriptorPathSchema, getParentPath } from '@shared/pluginTypes';
 import * as SearchForm from '@renderer/components/shared/SearchForm/SearchForm';
 import { RequestState } from '@renderer/components/shared/RequestState/RequestState';
 import { LoadingState } from '@renderer/components/shared/LoadingState/LoadingState';
 import { ResourceGrid } from '@renderer/components/ResourceGrid/ResourceGrid';
 import { ResourceView } from '@renderer/components/ResourceView/ResourceView';
-import { useDescriptorBrowser } from '@renderer/hooks/useDescriptorBrowser';
+import { DescriptorBrowserEntity } from '@renderer/hooks/useDescriptorBrowser';
 import { descriptorLabels } from '@renderer/utils/resourcePresentation';
-import type { DiscoverSearch } from '@renderer/services/discoverNavigation';
-import { BreadCrumb } from '@renderer/components/BreadCrumb/BreadCrumb';
 import { BrowserRetry } from '@renderer/components/shared/BrowserRetry/BrowserRetry';
 
-export interface DescriptorBrowserProps {
-  pluginId: string;
-  source: SourceMetadata;
-  descriptor: DescriptorMetadata;
-  search: DiscoverSearch;
-  navigate: (search: DiscoverSearch) => void;
-}
-
-export function DescriptorBrowser({
-  pluginId,
-  source,
-  descriptor,
-  search,
-  navigate
-}: DescriptorBrowserProps): ReactElement {
-  const browser = useDescriptorBrowser(pluginId, source.id, descriptor, search, navigate);
+export function DescriptorBrowser(browser: DescriptorBrowserEntity): ReactElement {
   const [input, setInput] = useState(browser.query);
-  const canSearch = descriptor.operations.includes('search');
-  const label = descriptorLabels[descriptor.kind];
+  const canSearch = browser.descriptorProps.descriptor.operations.includes('search');
+  const label = descriptorLabels[browser.descriptorProps.descriptor.kind];
 
   return (
     <Flex direction="column" gap="4" pt="4" aria-busy={browser.fetching || browser.opening}>
-      <BreadCrumb browser={browser} />
       {browser.detailError && (
         <Text role="alert" color="red">
           {browser.detailError}
@@ -57,13 +38,13 @@ export function DescriptorBrowser({
           </Button>
           <ResourceView
             source={{
-              pluginId,
-              sourceId: source.id,
+              pluginId: browser.descriptorProps.pluginId,
+              sourceId: browser.descriptorProps.source.id,
               path: DescriptorPathSchema.parse(getParentPath(browser.path))
             }}
             resource={browser.current}
             resourcePath={browser.path}
-            origin={search.origin}
+            origin={browser.descriptorProps.search.origin}
             descriptors={browser.children}
             busy={browser.opening}
             onOpen={browser.open}
@@ -116,10 +97,14 @@ export function DescriptorBrowser({
           >
             {browser.entries.length ? (
               <ResourceGrid
-                source={{ pluginId, sourceId: source.id, path: [descriptor.kind] }}
+                source={{
+                  pluginId: browser.descriptorProps.pluginId,
+                  sourceId: browser.descriptorProps.source.id,
+                  path: [browser.descriptorProps.descriptor.kind]
+                }}
                 parents={[]}
                 entries={browser.entries}
-                canOpen={descriptor.operations.includes('get')}
+                canOpen={browser.descriptorProps.descriptor.operations.includes('get')}
                 busy={browser.opening}
                 onOpen={browser.open}
               />
@@ -127,7 +112,7 @@ export function DescriptorBrowser({
               <Text role="status" color="gray">
                 {browser.query
                   ? 'Aucune ressource ne correspond à votre recherche.'
-                  : descriptor.operations.includes('suggestions')
+                  : browser.descriptorProps.descriptor.operations.includes('suggestions')
                     ? 'Aucune suggestion trouvée.'
                     : canSearch
                       ? 'Aucune suggestion disponible. Lancez une recherche pour trouver des ressources.'

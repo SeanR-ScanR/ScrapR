@@ -3,8 +3,10 @@ import type { ReactElement } from 'react';
 import { PageSection } from '@renderer/components/shared/PageSection/PageSection';
 import { DescriptorBrowser } from '@renderer/components/DescriptorBrowser/DescriptorBrowser';
 import { descriptorLabels } from '@renderer/utils/resourcePresentation';
-import type { SourceMetadata } from '@shared/pluginTypes';
+import type { DescriptorMetadata, SourceMetadata } from '@shared/pluginTypes';
 import type { DiscoverSearch } from '@renderer/services/discoverNavigation';
+import { BreadCrumb } from '@renderer/components/BreadCrumb/BreadCrumb';
+import { useDescriptorBrowser } from '@renderer/hooks/useDescriptorBrowser';
 
 export default function PageDiscover({
   pluginId,
@@ -18,10 +20,18 @@ export default function PageDiscover({
   navigate: (search: DiscoverSearch) => void;
 }): ReactElement {
   const { descriptors } = source;
-  const selected = descriptors.find(({ kind }) => kind === search.kind) ?? descriptors[0];
-
+  const selected: DescriptorMetadata =
+    descriptors.find(({ kind }) => kind === search.kind) ?? descriptors[0];
+  const browser = useDescriptorBrowser({
+    pluginId,
+    source,
+    descriptor: selected,
+    search,
+    navigate
+  });
   return (
-    <PageSection title={`${source.name}`}>
+    <PageSection>
+      <BreadCrumb browser={browser} />
       {descriptors.length ? (
         <Tabs.Root
           value={selected.kind}
@@ -39,19 +49,9 @@ export default function PageDiscover({
               ))}
             </Tabs.List>
           </Box>
-          {descriptors
-            .filter(({ kind }) => kind === selected.kind)
-            .map((descriptor) => (
-              <Tabs.Content key={descriptor.kind} value={descriptor.kind}>
-                <DescriptorBrowser
-                  pluginId={pluginId}
-                  source={source}
-                  descriptor={descriptor}
-                  search={search}
-                  navigate={navigate}
-                />
-              </Tabs.Content>
-            ))}
+          <Tabs.Content key={selected.kind} value={selected.kind}>
+            <DescriptorBrowser {...browser} />
+          </Tabs.Content>
         </Tabs.Root>
       ) : (
         <Text>Cette source ne propose aucun type de ressource à parcourir.</Text>

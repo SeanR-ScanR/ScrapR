@@ -1,8 +1,8 @@
 import { Button, Flex } from '@radix-ui/themes';
-import { DescriptorBrowser } from '@renderer/hooks/useDescriptorBrowser';
+import { DescriptorBrowserEntity } from '@renderer/hooks/useDescriptorBrowser';
 import { JSX } from 'react';
 
-export function BrowserRetry(props: { browser: DescriptorBrowser }): JSX.Element {
+export function BrowserRetry(props: { browser: DescriptorBrowserEntity }): JSX.Element {
   return (
     <Flex direction="column" gap="2">
       {props.browser.detailError && (
