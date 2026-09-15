@@ -20,7 +20,7 @@ export function Root(props: RootProps): ReactElement {
 
 export function List({ style, ...props }: ListProps): ReactElement {
   return (
-    <Flex asChild align="center" gap="2" wrap="wrap">
+    <Flex asChild align="center" gap="1" wrap="wrap" justify="start" minHeight="2.5em">
       <ol style={{ listStyle: 'none', margin: 0, padding: 0, ...style }} {...props} />
     </Flex>
   );

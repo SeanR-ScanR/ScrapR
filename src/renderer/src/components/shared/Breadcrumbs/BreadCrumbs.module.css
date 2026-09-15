@@ -1,6 +1,6 @@
 .button {
   text-decoration: none;
-  color: inherit;
+  color: var(--text-muted);
   background-color: inherit;
   border: none;
   font-size: 1.2em;
@@ -8,17 +8,21 @@
   padding-left: 0.2em;
   padding-right: 0.2em;
   margin: 0;
+  line-height: 1.5em;
+}
+
+.button_current {
+  color: var(--text-main);
 }
 
 .button:hover {
   background-color: grey;
 }
 
-.button_current {
-  font-weight: bold;
-}
 
 .separator {
+  color: var(--text-muted);
+  font-size: 1.5em;
   margin-left: 0;
   margin-right: 0;
 }
